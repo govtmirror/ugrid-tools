@@ -11,3 +11,9 @@ RUN apt-get clean
 RUN conda update -y --all
 RUN conda install -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis pytest
 RUN pip install ipdb logbook
+
+COPY . /tmp/pmesh
+RUN cd /opt && git clone /tmp/pmesh
+RUN rm -r /tmp/pmesh
+
+RUN cd /opt/pmesh && bash test.sh
