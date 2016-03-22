@@ -8,20 +8,20 @@ from logbook import INFO
 
 from pmesh.helpers import nc_scope
 from pmesh.logging import log
-from pmesh.pyugrid.flexible_mesh.mpi import MPI_RANK, MPI_COMM, create_slices
+from pmesh.pyugrid.flexible_mesh.mpi import MPI_RANK, MPI_COMM, create_sections
 
 
 def create_linked_shapefile(name_uid, output_variable, path_in_shp, path_linked_shp, path_output_data):
     with fiona.open(path_in_shp) as source:
         sink_meta = source.meta.copy()
-        sink_meta['schema']['properties']['target'] = 'float'
+        sink_meta['schema']['properties'][output_variable] = 'float'
         with fiona.open(path_linked_shp, mode='w', **sink_meta) as sink:
             with nc_scope(path_output_data) as output:
                 for record in source:
                     uid = record['properties'][name_uid]
                     select = output.variables[name_uid][:] == uid
                     target_value = float(output.variables[output_variable][0, select][0])
-                    record['properties']['target'] = target_value
+                    record['properties'][output_variable] = target_value
                     sink.write(record)
 
 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     if MPI_RANK == 0:
         weighted_data_files = filter(lambda x: x.startswith('pr_weighted'), listdir(directory_weighted_data))
-        weighted_data_files = [weighted_data_files[slc[0]: slc[1]] for slc in create_slices(len(weighted_data_files))]
+        weighted_data_files = [weighted_data_files[slc[0]: slc[1]] for slc in create_sections(len(weighted_data_files))]
     else:
         weighted_data_files = None
 

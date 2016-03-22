@@ -14,6 +14,10 @@ class FlexibleMesh(UGrid):
     """
     check_array_order = False
 
+    def __init__(self, *args, **kwargs):
+        self.face_areas = kwargs.pop('face_areas', None)
+        super(FlexibleMesh, self).__init__(*args, **kwargs)
+
     @UGrid.face_face_connectivity.setter
     def face_face_connectivity(self, face_face_connectivity):
         if face_face_connectivity is not None:
@@ -136,7 +140,7 @@ def get_flexible_mesh(gm, mesh_name, use_ragged_arrays, with_connectivity=True):
 
     result = get_variables(gm, use_ragged_arrays=use_ragged_arrays, with_connectivity=with_connectivity)
     if MPI_RANK == 0:
-        face_nodes, face_edges, edge_nodes, nodes, face_links, face_ids, face_coordinates = result
+        face_nodes, face_edges, edge_nodes, nodes, face_links, face_ids, face_coordinates, face_areas = result
         data_attrs = {'long_name': 'Face unique identifiers.'}
         # TODO (bekozi): necessary to use a dictionary here? key of dictionary is never used.
         data = {'': UVar(gm.name_uid, location='face', data=face_ids, attributes=data_attrs)}
@@ -144,7 +148,7 @@ def get_flexible_mesh(gm, mesh_name, use_ragged_arrays, with_connectivity=True):
         ret = FlexibleMesh(nodes=nodes, faces=face_nodes, edges=edge_nodes, boundaries=None,
                            face_face_connectivity=face_links, face_edge_connectivity=face_edges,
                            edge_coordinates=None, face_coordinates=face_coordinates, boundary_coordinates=None,
-                           data=data, mesh_name=mesh_name)
+                           data=data, mesh_name=mesh_name, face_areas=face_areas)
     else:
         ret = None
     return ret

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 echo '+++ Serial tests +++'
-py.test -q -m 'not mpi_only' src
-echo ''
+nosetests -q -a '!mpi_only' src && \
+echo '' && \
 
-echo '+++ MPI tests ++++++'
-mpirun -n 8 py.test -q -m 'mpi' src
+echo '+++ MPI tests ++++++' && \
+mpirun -n 8 nosetests -q -a 'mpi' src
 

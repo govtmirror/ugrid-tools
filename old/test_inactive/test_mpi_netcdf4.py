@@ -1,8 +1,8 @@
 """Test writing to a netCDF4 variable using MPI."""
-from pmesh.test.base import AbstractNFIETest
-from mpi4py import MPI
 import numpy as np
+from mpi4py import MPI
 
+from pmesh.test.base import AbstractPmeshTest
 
 COMM = MPI.COMM_WORLD
 SIZE = COMM.Get_size()
@@ -10,7 +10,7 @@ STATUS = MPI.Status()
 RANK = COMM.Get_rank()
 
 
-class Test(AbstractNFIETest):
+class Test(AbstractPmeshTest):
 
     def test(self):
         name_var = 'pr'

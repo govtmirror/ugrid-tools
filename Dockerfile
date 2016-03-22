@@ -9,7 +9,7 @@ RUN apt-get -y install build-essential \
 RUN apt-get clean
 
 RUN conda update -y --all
-RUN conda install -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis pytest
+RUN conda install -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis nose
 RUN pip install ipdb logbook
 
 COPY . /tmp/pmesh

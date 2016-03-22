@@ -1,12 +1,9 @@
-import pytest
-
 from pmesh.logging import log
-from pmesh.test.base import AbstractNFIETest
+from pmesh.test.base import AbstractPmeshTest, attr
 
 
-class Test(AbstractNFIETest):
-
-    @pytest.mark.mpi
+class Test(AbstractPmeshTest):
+    @attr('mpi')
     def test(self):
         log.info('test hello world')
 

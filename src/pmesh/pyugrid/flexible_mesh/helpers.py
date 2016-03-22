@@ -12,7 +12,7 @@ from pmesh.logging import log, log_entry_exit
 from pmesh.pyugrid.flexible_mesh import constants
 from pmesh.pyugrid.flexible_mesh.constants import PYUGRID_LINK_ATTRIBUTE_NAME
 from pmesh.pyugrid.flexible_mesh.geom_cabinet import GeomCabinetIterator
-from pmesh.pyugrid.flexible_mesh.mpi import MPI_RANK, create_slices, MPI_COMM, hgather, vgather, MPI_SIZE, dgather
+from pmesh.pyugrid.flexible_mesh.mpi import MPI_RANK, create_sections, MPI_COMM, hgather, vgather, MPI_SIZE, dgather
 from pmesh.pyugrid.flexible_mesh.spatial_index import SpatialIndex
 
 
@@ -153,7 +153,7 @@ def get_variables(gm, use_ragged_arrays=False, with_connectivity=True):
     result = get_face_variables(gm, with_connectivity=with_connectivity)
 
     if MPI_RANK == 0:
-        face_links, nmax_face_nodes, face_ids, face_coordinates, cdict, n_coords = result
+        face_links, nmax_face_nodes, face_ids, face_coordinates, cdict, n_coords, face_areas = result
     else:
         return
 
@@ -168,7 +168,7 @@ def get_variables(gm, use_ragged_arrays=False, with_connectivity=True):
             new_arrays.append(get_rectangular_array_from_object_array(a, (a.shape[0], nmax_face_nodes)))
         face_links, face_nodes, face_edges = new_arrays
 
-    return face_nodes, face_edges, edge_nodes, coordinates, face_links, face_ids, face_coordinates
+    return face_nodes, face_edges, edge_nodes, coordinates, face_links, face_ids, face_coordinates, face_areas
 
 
 def get_rectangular_array_from_object_array(target, shape):
@@ -195,7 +195,7 @@ def get_face_variables(gm, with_connectivity=True):
     log.debug('number of faces is {} (rank={})'.format(n_face, MPI_RANK))
 
     if MPI_RANK == 0:
-        sections = create_slices(n_face)
+        sections = create_sections(n_face)
     else:
         sections = None
 
@@ -212,10 +212,9 @@ def get_face_variables(gm, with_connectivity=True):
     face_links = {}
     max_face_nodes = 0
     face_coordinates = deque()
+    face_areas = deque()
 
     log.debug('section={0} (rank={1})'.format(section, MPI_RANK))
-
-    len_section = section[1] - section[0]
 
     cdict = OrderedDict()
     n_coords = 0
@@ -234,6 +233,7 @@ def get_face_variables(gm, with_connectivity=True):
 
         # Get representative points for each polygon.
         face_coordinates.append(np.array(ref_object.representative_point()))
+        face_areas.append(ref_object.area)
 
         # For polygon geometries the first coordinate is repeated at the end of the sequence. UGRID clients do not want
         # repeated coordinates (i.e. ESMF).
@@ -263,12 +263,14 @@ def get_face_variables(gm, with_connectivity=True):
     face_coordinates = MPI_COMM.gather(np.array(face_coordinates), root=0)
     cdict = MPI_COMM.gather(cdict, root=0)
     n_coords = MPI_COMM.gather(n_coords, root=0)
+    face_areas = MPI_COMM.gather(np.array(face_areas), root=0)
 
     if MPI_RANK == 0:
         face_ids = hgather(face_ids)
         face_coordinates = vgather(face_coordinates)
         cdict = dgather(cdict)
         n_coords = sum(n_coords)
+        face_areas = hgather(face_areas)
 
         max_face_nodes = max(max_face_nodes)
 
@@ -277,7 +279,7 @@ def get_face_variables(gm, with_connectivity=True):
         else:
             face_links = None
 
-        return face_links, max_face_nodes, face_ids, face_coordinates, cdict, n_coords
+        return face_links, max_face_nodes, face_ids, face_coordinates, cdict, n_coords, face_areas
 
 
 def get_mapped_face_links(face_ids, face_links):
@@ -541,10 +543,10 @@ def flexible_mesh_to_esmf_format(fm, ds, polygon_break_value=None, start_index=0
         uid[:] = value
         uid.long_name = 'Element unique identifier.'
 
-    # tdk: compute area required?
-    # element_area = ds.createVariable('elementArea', fm.nodes.dtype, (element_count.name,))
-    # element_area.units = 'degrees'
-    # element_area.long_name = 'area weights'
+    element_area = ds.createVariable('elementArea', fm.nodes.dtype, (element_count.name,))
+    element_area[:] = fm.face_areas
+    element_area.units = 'degrees'
+    element_area.long_name = 'Element area in native units.'
 
     # tdk: element mask required?
     # element_mask = ds.createVariable('elementMask', np.int32, (element_count.name,))

@@ -1,15 +1,12 @@
 import os
 
-import pytest
-
 from pmesh.prep.prep_shapefiles import convert_to_esmf_format
 from pmesh.pyugrid.flexible_mesh.mpi import MPI_COMM, MPI_RANK
-from pmesh.test.base import AbstractNFIETest
+from pmesh.test.base import AbstractPmeshTest, attr
 
 
-class Test(AbstractNFIETest):
-
-    @pytest.mark.mpi
+class Test(AbstractPmeshTest):
+    @attr('mpi')
     def test_convert_to_esmf_format(self):
         path_in_shp = os.path.join(self.path_bin, 'nhd_catchments_texas', 'nhd_catchments_texas.shp')
         name_uid = 'GRIDCODE'
@@ -18,6 +15,6 @@ class Test(AbstractNFIETest):
 
         if MPI_RANK == 0:
             with self.nc_scope(path_out_nc) as ds:
-                self.assertEqual(len(ds.variables), 5)
+                self.assertEqual(len(ds.variables), 6)
 
         MPI_COMM.Barrier()

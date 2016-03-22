@@ -1,12 +1,12 @@
 import os
 
-from pmesh.test.base import AbstractNFIETest
+import matplotlib.pyplot as plt
 import numpy as np
 
-import matplotlib.pyplot as plt
+from pmesh.test.base import AbstractPmeshTest
 
 
-class Test(AbstractNFIETest):
+class Test(AbstractPmeshTest):
 
     def test_from_file(self):
         path_output = os.path.expanduser('~/data/pmesh/nfie_out')

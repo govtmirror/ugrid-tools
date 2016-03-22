@@ -56,7 +56,7 @@ def validate_esmf_format(ds, name_uid, path_in_shp):
 if __name__ == '__main__':
     # Run with MPI: mpirun -n 8 prep_shapefiles.py
 
-    nfie_version = '20160314-0940'
+    nfie_version = 'v0.1.0.dev1-run2'
 
     name_uid = 'GRIDCODE'
     storage_dir_shp = os.path.expanduser('~/storage/catchment_shapefiles')

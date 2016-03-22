@@ -7,8 +7,8 @@ import ocgis
 from pmesh.logging import log
 
 
-def create_source_netcdf_data(path, row=None, col=None, analytic=False):
-    field = get_ocgis_field(col, row, analytic=analytic)
+def create_source_netcdf_data(path, row=None, col=None, exact=False, variable_name='pr'):
+    field = get_ocgis_field(col, row, exact=exact, variable_name=variable_name)
 
     ds = nc.Dataset(path, 'w', format='NETCDF3_CLASSIC')
     field.write_netcdf(ds)
@@ -17,7 +17,7 @@ def create_source_netcdf_data(path, row=None, col=None, analytic=False):
     ds.close()
 
 
-def get_ocgis_field(col=None, row=None, analytic=False):
+def get_ocgis_field(col=None, row=None, exact=False, variable_name='pr'):
     from ocgis import VectorDimension
     import ocgis
 
@@ -47,22 +47,29 @@ def get_ocgis_field(col=None, row=None, analytic=False):
     temporal = ocgis.TemporalDimension(value=ret, unlimited=True)
 
     var_value = np.ones((1, temporal.shape[0], 1, row.shape[0], col.shape[0]), dtype=float)
-    if analytic:
+    if exact:
         # f(lat,lon) = 2+cos^2(lat) + cos(2lon)
         radians = grid.value.copy()
         radians[1] += 360.
         radians *= 0.0174533
         # radians = radians * 0.0174533
-        fill = 2 + np.cos(radians[0])**2 + np.cos(2 * radians[1])
+        lat_rad = radians[0]
+        lon_rad = radians[1]
+        fill = get_exact_field(lat_rad, lon_rad)
         # fill = grid.value[0, :, :] * (grid.value[1, :, :] + 360.)**2
         var_value[:] = fill
     else:
         for idx in range(var_value.shape[1]):
             var_value[:, idx, :, :, :] = var_value[:, idx, :, :, :] * idx
 
-    variable = ocgis.Variable(value=var_value, name='pr')
+    variable = ocgis.Variable(value=var_value, name=variable_name)
     field = ocgis.Field(spatial=sdim, temporal=temporal, variables=variable)
     return field
+
+
+def get_exact_field(lat_rad, lon_rad):
+    fill = 2 + np.cos(lat_rad) ** 2 + np.cos(2 * lon_rad)
+    return fill
 
 
 if __name__ == '__main__':
@@ -70,7 +77,7 @@ if __name__ == '__main__':
     ocgis.env.OVERWRITE = True
 
     path = '/tmp/analytic-conus_20160316-1737.nc'
-    create_source_netcdf_data(path, analytic=True)
+    create_source_netcdf_data(path, exact=True)
     ops = ocgis.OcgOperations(dataset={'uri': path}, snippet=True, output_format='shp', prefix='analytic-conus')
 
     # Create analytical data for Texas catchments.

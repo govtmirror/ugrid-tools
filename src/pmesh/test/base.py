@@ -4,15 +4,11 @@ import subprocess
 import tempfile
 from unittest import TestCase
 
-import logbook
-
 from pmesh.helpers import nc_scope
 
 
-class AbstractNFIETest(TestCase):
+class AbstractPmeshTest(TestCase):
     key = 'pmesh'
-    logging_level = logbook.INFO
-    log = logbook.Logger(key, level=logging_level)
 
     @property
     def path_bin(self):
@@ -33,14 +29,7 @@ class AbstractNFIETest(TestCase):
     def nc_scope(self, *args, **kwargs):
         return nc_scope(*args, **kwargs)
 
-    def set_debug(self, value):
-        if value:
-            self.log.level = logbook.DEBUG
-        else:
-            self.log.level = logbook.INFO
-
     def setUp(self):
-        self.set_debug(False)
         self.path_current_tmp = tempfile.mkdtemp(prefix='{0}_test_'.format(self.key))
 
     def shortDescription(self):
@@ -48,3 +37,20 @@ class AbstractNFIETest(TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.path_current_tmp)
+
+
+def attr(*args, **kwargs):
+    """
+    Decorator that adds attributes to classes or functions for use with the Attribute (-a) plugin.
+
+    http://nose.readthedocs.org/en/latest/plugins/attrib.html
+    """
+
+    def wrap_ob(ob):
+        for name in args:
+            setattr(ob, name, True)
+        for name, value in kwargs.iteritems():
+            setattr(ob, name, value)
+        return ob
+
+    return wrap_ob

@@ -1,15 +1,17 @@
 import os
+
 import ESMF
+import numpy as np
 from ocgis import OcgOperations
 from pyugrid.flexible_mesh.core import get_flexible_mesh
 from pyugrid.flexible_mesh.helpers import GeometryManager
-from shapely.geometry import MultiPolygon, box
-from pmesh.test.base import AbstractNFIETest
-import numpy as np
+from shapely.geometry import MultiPolygon
+
 from pmesh.regrid.core_esmpy import get_field_src
+from pmesh.test.base import AbstractPmeshTest
 
 
-class Test(AbstractNFIETest):
+class Test(AbstractPmeshTest):
 
     def test_disjoint_polygons(self):
         """Test mesh regridding with the source destination containing disjoint polygons."""

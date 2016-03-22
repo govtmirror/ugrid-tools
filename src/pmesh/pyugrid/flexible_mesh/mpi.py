@@ -35,7 +35,8 @@ else:
 MPI_SIZE = MPI_COMM.Get_size()
 MPI_RANK = MPI_COMM.Get_rank()
 
-def create_slices(length, size=MPI_SIZE):
+
+def create_sections(length, size=MPI_SIZE):
     step = int(np.ceil(float(length) / size))
     indexes = [None] * size
     start = 0
