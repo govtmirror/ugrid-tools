@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+
+#BSUB -P P35071400                                       # project code
+#BSUB -W 00:06                                           # wall-clock time (hrs:mins)
+#BSUB -n 8                                               # number of tasks in job
+#BSUB -R "span[ptile=8]"                                 # run ptile=<> MPI tasks per node
+#BSUB -J pmesh                                           # job name
+#BSUB -o /glade/u/home/benkoz/sandbox/pmesh.test.out     # output file name
+#BSUB -e /glade/u/home/benkoz/sandbox/pmesh.test.err     # error file name
+#BSUB -q geyser                                          # queue
+
+export PATH=/glade/u/home/benkoz/miniconda2/envs/pmesh/bin:${PATH}
+SRC=/glade/u/home/benkoz/src/pmesh/src
+
+echo '+++ Serial tests +++'
+nosetests -q -a '!mpi_only' ${SRC} && \
+echo '' && \
+
+echo '+++ MPI tests ++++++' && \
+mpirun.lsf nosetests -q -a 'mpi' ${SRC} && \
+
+echo 'test.sh success'
