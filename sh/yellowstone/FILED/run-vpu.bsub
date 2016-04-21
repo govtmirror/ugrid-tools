@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+
+#BSUB -P P35071400
+#BUSB -J pmesh-debug
+#BSUB -W 00:45
+#BSUB -n 32
+#BSUB -R "span[ptile=16]"
+#BSUB -o /glade/u/home/benkoz/logs/pmesh.%J.out
+#BSUB -e /glade/u/home/benkoz/logs/pmesh.%J.err
+#BSUB -q economy
+#BSUB -B
+
+
+ESMF_EXE=/glade/u/home/benkoz/sandbox/esmf_HEAD/bin/ESMF_RegridWeightGen
+SOURCE=/glade/u/home/benkoz/storage/exact_data/exact-conus-025degree_20160316-1737.nc
+DESTINATION=/glade/u/home/benkoz/storage/catchment_esmf_format/catchments_esmf_09-SourisRedRainy_v0.1.0.dev1-run2.nc
+#DESTINATION=/glade/u/home/benkoz/storage/catchment_esmf_format/catchments_esmf_14-UpperColorado_v0.1.0.dev1-run2.nc
+WEIGHTS=/glade/u/home/benkoz/storage/scratch/weights.nc
+
+mpirun.lsf ${ESMF_EXE} -s ${SOURCE} -d ${DESTINATION} -w ${WEIGHTS} -m conserve --src_type GRIDSPEC --dst_type ESMF \
+    --src_regional

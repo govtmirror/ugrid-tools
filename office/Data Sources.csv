@@ -1,0 +1,22 @@
+Vector Processing Unit,Name,Catchment URL
+01,Northeast,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusNE/NHDPlusV21_NE_01_NHDPlusCatchment_01.7z
+02,Mid Atlantic,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusMA/NHDPlusV21_MA_02_NHDPlusCatchment_01.7z
+03N,South Atlantic North,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusSA/NHDPlus03N/NHDPlusV21_SA_03N_NHDPlusCatchment_01.7z
+03S,South Atlantic South,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusSA/NHDPlus03S/NHDPlusV21_SA_03S_NHDPlusCatchment_01.7z
+03W,South Atlantic West,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusSA/NHDPlus03W/NHDPlusV21_SA_03W_NHDPlusCatchment_01.7z
+04,Great Lakes,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusGL/NHDPlusV21_GL_04_NHDPlusCatchments_05.7z
+05,Ohio,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusMS/NHDPlus05/NHDPlusV21_MS_05_NHDPlusCatchment_01.7z
+06,Tennessee,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusMS/NHDPlus06/NHDPlusV21_MS_06_NHDPlusCatchment_05.7z
+07,Upper Mississippi,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusMS/NHDPlus07/NHDPlusV21_MS_07_NHDPlusCatchment_01.7z
+08,Lower Mississippi,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusMS/NHDPlus08/NHDPlusV21_MS_08_NHDPlusCatchment_01.7z
+09,Souris-Red-Rainy,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusSR/NHDPlusV21_SR_09_NHDPlusCatchment_01.7z
+10U,Upper Missouri,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusMS/NHDPlus10U/NHDPlusV21_MS_10U_NHDPlusCatchment_02.7z
+10L,Lower Missouri,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusMS/NHDPlus10L/NHDPlusV21_MS_10L_NHDPlusCatchment_01.7z
+11,Ark-Red-White,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusMS/NHDPlus11/NHDPlusV21_MS_11_NHDPlusCatchment_01.7z
+12,Texas,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusTX/NHDPlusV21_TX_12_NHDPlusCatchment_01.7z
+13,Rio Grande,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusRG/NHDPlusV21_RG_13_NHDPlusCatchment_02.7z
+14,Upper Colorado,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusCO/NHDPlus14/NHDPlusV21_CO_14_NHDPlusCatchment_01.7z
+15,Lower Colorado,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusCO/NHDPlus15/NHDPlusV21_CO_15_NHDPlusCatchment_01.7z
+16,Great Basin,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusGB/NHDPlusV21_GB_16_NHDPlusCatchment_01.7z
+17,Pacific Northwest,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusPN/NHDPlusV21_PN_17_NHDPlusCatchment_02.7z
+18,California,ftp://www.horizon-systems.com/NHDPlus/NHDPlusV21/Data/NHDPlusCA/NHDPlusV21_CA_18_NHDPlusCatchment_01.7z

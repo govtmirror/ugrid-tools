@@ -1,12 +1,5 @@
-import csv
-import os
 import re
-from os.path import join
 
-import numpy as np
-from ocgis import CoordinateReferenceSystem
-from ocgis.interface.base.dimension.spatial import SpatialGeometryPolygonDimension
-from shapely.geometry import MultiPolygon
 from sqlalchemy import ForeignKey, Float
 from sqlalchemy.engine import create_engine
 from sqlalchemy.ext.declarative.api import declarative_base
@@ -16,12 +9,13 @@ from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.schema import MetaData, Column
 from sqlalchemy.types import Integer, String
 
-# connstr = 'sqlite://'
+connstr = 'sqlite://'
 # connstr = 'postgresql://bkoziol:<password>@localhost/<database>'
 # connstr = 'postgresql://{user}:{password}@{host}/{database}'
 ## four slashes for absolute paths - three for relative
-db_path = '/home/benkoziol/l/project/pmesh/src/pmesh/analysis/catchments.sqlite'
-connstr = 'sqlite:///{0}'.format(db_path)
+# db_path = '/home/benkoziol/l/project/pmesh/src/pmesh/analysis/yellowstone/log_output.sqlite'
+# connstr = 'sqlite:///{0}'.format(db_path)
+
 
 engine = create_engine(connstr)
 metadata = MetaData(bind=engine)
@@ -33,79 +27,13 @@ class VectorProcessingUnit(Base):
     __tablename__ = 'vpu'
     vid = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
-
     timing = relationship("Timing", backref=backref("vpu"))
-    shapefile = relationship("Shapefile", backref=backref("vpu"))
-    catchment = relationship("Catchment", backref=backref("vpu"))
-
-    def get_area(self):
-        """
-        :returns: Area in square meters.
-        :rtype: float
-        """
-
-        return reduce(lambda x, y: x + y, (c.area for c in self.catchment))
-
-    def get_node_count(self):
-        return reduce(lambda x, y: x + y, (c.node_count for c in self.catchment))
-
-    def get_max_node_count(self):
-        return max([c.node_count for c in self.catchment])
-
-
-class Shapefile(Base):
-    __tablename__ = 'shapefile'
-    sid = Column(Integer, primary_key=True)
-    vid = Column(Integer, ForeignKey('vpu.vid'), nullable=False)
-    fullpath = Column(String, unique=True, nullable=False)
-
-    @classmethod
-    def create(cls, vpu, directory):
-        for root, dirs, files in os.walk(directory):
-            for f in files:
-                if f.endswith('.shp'):
-                    fullpath = join(root, f)
-        return cls(fullpath=fullpath, vpu=vpu)
-
-
-class Catchment(Base):
-    __tablename__ = 'catchment'
-    gridcode = Column(Integer, primary_key=True)
-    vid = Column(Integer, ForeignKey('vpu.vid'), nullable=False)
-    node_count = Column(Integer, nullable=False)
-    face_count = Column(Integer, nullable=False)
-    # Area is in square meters.
-    area = Column(Float, nullable=False)
-
-    @classmethod
-    def create(cls, vpu, record, to_crs):
-        geom = record['geom']
-        if not geom.is_valid:
-            geom = geom.buffer(0)
-            assert geom.is_valid
-        if isinstance(geom, MultiPolygon):
-            itr = geom
-            face_count = len(geom)
-        else:
-            itr = [geom]
-            face_count = 1
-        node_count = 0
-        for element in itr:
-            node_count += len(element.exterior.coords)
-        return cls(gridcode=record['properties']['GRIDCODE'],
-                   node_count=node_count,
-                   face_count=face_count,
-                   area=get_area(geom, to_crs),
-                   vpu=vpu)
 
 
 class Job(Base):
     __tablename__ = 'job'
     jid = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
-    queue = Column(String, nullable=False)
-    cores = Column(Integer, nullable=False)
-    cluster = Column(String, nullable=False)
     cpu_time = Column(Float, nullable=False)
     max_memory = Column(Float, nullable=False)
     average_memory = Column(Float, nullable=False)
@@ -113,7 +41,7 @@ class Job(Base):
     turnaround_time = Column(Float, nullable=False)
 
     @classmethod
-    def create(cls, cores, path):
+    def create(cls, path):
         k = {}
         k['jid'] = re_file(path, 'Subject: Job (.+):').group(1)
         k['name'] = re_file(path, 'Job <(.+)> was submitted').group(1)
@@ -122,9 +50,6 @@ class Job(Base):
         k['average_memory'] = re_file(path, 'Average Memory : +(.+) MB').group(1)
         k['run_time'] = re_file(path, 'Run time : +(.+) sec').group(1)
         k['turnaround_time'] = re_file(path, 'Turnaround time : +(.+) sec').group(1)
-        k['queue'] = re_file(path, 'queue <(.+)>, as user').group(1)
-        k['cluster'] = re_file(path, 'cluster <(.+)>\.').group(1)
-        k['cores'] = cores
         job = Job(**k)
         return job
 
@@ -194,27 +119,18 @@ def re_file(path, pattern):
                 return search
 
 
-def dump_model_to_csv(Session, Model, path):
-    s = Session()
-    try:
-        build = True
-        with open(path, 'w') as f:
-            writer = csv.writer(f)
-            for row in s.query(Model):
-                if build:
-                    headers = [column.name for column in row.__table__.columns]
-                    writer.writerow(headers)
-                    build = False
-                to_write = [getattr(row, header) for header in headers]
-                writer.writerow(to_write)
-    finally:
-        s.close()
-
-
-def get_area(geom, to_crs, from_crs=None):
-    from_crs = from_crs or CoordinateReferenceSystem(epsg=4326)
-    value = np.array([[0]], dtype=object)
-    value[0, 0] = geom
-    s = SpatialGeometryPolygonDimension(value=value)
-    s.update_crs(to_crs, from_crs)
-    return s.value[0, 0].area
+                # def dump_model_to_csv(Session,Model,path):
+                #     s = Session()
+                #     try:
+                #         build = True
+                #         with open(path,'w') as f:
+                #             writer = csv.writer(f)
+                #             for row in s.query(Model):
+                #                 if build:
+                #                     headers = [column.name for column in row.__table__.columns]
+                #                     writer.writerow(headers)
+                #                     build = False
+                #                 to_write = [getattr(row,header) for header in headers]
+                #                 writer.writerow(to_write)
+                #     finally:
+                #         s.close()
