@@ -4,6 +4,7 @@ from copy import copy
 
 import fiona
 import numpy as np
+from addict import Dict
 from shapely.geometry import shape, mapping, Polygon, MultiPolygon
 from shapely.geometry.base import BaseMultipartGeometry
 from shapely.geometry.polygon import orient
@@ -45,18 +46,6 @@ def convert_multipart_to_singlepart(path_in, path_out, new_uid_name=PYUGRID_LINK
                     record['properties'][new_uid_name] = start
                     sink.write(record)
                     start += 1
-
-#tdk: remove
-# @log_entry_exit
-# def get_coordinates_dict(gm, n_faces=None):
-#     n_faces = n_faces or len(gm)
-#     cdict = OrderedDict()
-#     n_coords = 0
-#     for ctr, (fid, record) in enumerate(gm.iter_records(return_uid=True), start=1):
-#         log.debug('extracting {} of {} (rank={})'.format(ctr, n_faces, MPI_RANK))
-#         coordinates_list, n_coords = get_coordinates_list_and_update_n_coords(record, n_coords)
-#         cdict[fid] = coordinates_list
-#     return cdict, n_coords
 
 
 def get_coordinates_list_and_update_n_coords(record, n_coords):
@@ -396,7 +385,7 @@ class GeometryManager(object):
     flat files.
     """
 
-    def __init__(self, name_uid, path=None, records=None, path_rtree=None, allow_multipart=False):
+    def __init__(self, name_uid, path=None, records=None, path_rtree=None, allow_multipart=False, node_threshold=None):
         if path_rtree is not None:
             assert os.path.exists(path_rtree + '.idx')
 
@@ -405,6 +394,7 @@ class GeometryManager(object):
         self.name_uid = name_uid
         self.records = copy(records)
         self.allow_multipart = allow_multipart
+        self.node_threshold = node_threshold
 
         self._has_provided_records = False if records is None else True
 
@@ -436,6 +426,11 @@ class GeometryManager(object):
                 # Only use the geometry objects from here. Maintaining the list of coordinates is superfluous.
                 record.pop('geometry')
             self._validate_record_(record)
+
+            # Modify the geometry if a node threshold is provided. This breaks the polygon object into pieces with the
+            # approximate node count.
+            if self.node_threshold is not None and get_node_count(record['geom']) > self.node_threshold:
+                record['geom'] = get_split_polygon_by_node_threshold(record['geom'], self.node_threshold)
 
             if return_uid:
                 uid = record['properties'][self.name_uid]
@@ -556,3 +551,112 @@ def flexible_mesh_to_esmf_format(fm, ds, polygon_break_value=None, start_index=0
     ds.gridType = 'unstructured'
     ds.version = '0.9'
     setattr(ds, coord_dim.name, "longitude latitude")
+
+
+def get_split_polygon_by_node_threshold(geom, node_threshold):
+    # tdk: doc
+    node_schema = get_node_schema(geom)
+    log.debug(node_schema)
+
+    # Collect geometries with node counts higher than the threshold.
+    to_split = []
+    for k, v in node_schema.items():
+        if v['node_count'] > node_threshold:
+            to_split.append(k)
+    log.debug('to split: {}'.format(to_split))
+
+    # Identify split parameters for an element exceeding the node threshold.
+    for ii in to_split:
+        n = node_schema[ii]
+        # Approximate number of splits need for each split element to be less than the node threshold.
+        n.n_splits = int(np.ceil(n['node_count'] / node_threshold))
+        # This is the shape of the polygon grid to use for splitting the target element.
+        n.split_shape = np.sqrt(n.n_splits)
+        # There should be at least two splits.
+        if n.split_shape == 1:
+            n.split_shape += 1
+        n.split_shape = tuple([int(np.ceil(ns)) for ns in [n.split_shape] * 2])
+
+        # Get polygons to use for splitting.
+        log.debug('split shape: {}'.format(n.split_shape))
+        n.splitters = get_split_polygons(n['geom'], n.split_shape)
+
+        # Create the individual splits:
+        n.splits = []
+        for s in n.splitters:
+            if n.geom.intersects(s):
+                the_intersection = n.geom.intersection(s)
+                for ti in get_iter(the_intersection, dtype=Polygon):
+                    n.splits.append(ti)
+
+                    # write_fiona(n.splits, '01-splits')
+
+    # Collect the polygons to return as a multipolygon.
+    the_multi = []
+    log.debug('length of node schema: {}'.format(len(node_schema)))
+    for v in node_schema.values():
+        if 'splits' in v:
+            the_multi += v.splits
+        else:
+            the_multi.append(v.geom)
+
+    return MultiPolygon(the_multi)
+
+
+def get_node_schema(geom):
+    # tdk: doc
+    ret = Dict()
+    for ctr, ii in enumerate(get_iter(geom, dtype=Polygon)):
+        ret[ctr].node_count = get_node_count(ii)
+        ret[ctr].area = ii.area
+        ret[ctr].geom = ii
+    return ret
+
+
+def get_node_count(geom):
+    node_count = 0
+    for ii in get_iter(geom, dtype=Polygon):
+        node_count += len(ii.exterior.coords)
+    return node_count
+
+
+def get_split_polygons(geom, split_shape):
+    # tdk: doc
+    from ocgis.new_interface.variable import Variable
+    from ocgis.new_interface.grid import GridXY
+
+    log.debug('geom bounds: {}'.format(geom.bounds))
+    minx, miny, maxx, maxy = geom.bounds
+    rows = np.linspace(miny, maxy, split_shape[0])
+    cols = np.linspace(minx, maxx, split_shape[1])
+
+    y = Variable(name='y', value=rows, dimensions='y')
+    x = Variable(name='x', value=cols, dimensions='x')
+    grid = GridXY(x, y)
+    grid.set_extrapolated_bounds('xbnds', 'ybnds', 'bounds')
+    return grid.polygon.value.flatten().tolist()
+
+
+def get_iter(element, dtype=None):
+    """
+    :param element: The element comprising the base iterator. If the element is a ``basestring`` or :class:`numpy.ndarray`
+     then the iterator will return the element and stop iteration.
+    :type element: varying
+    :param dtype: If not ``None``, use this argument as the argument to ``isinstance``. If ``element`` is an instance of
+     ``dtype``, ``element`` will be placed in a list and passed to ``iter``.
+    :type dtype: type or tuple
+    """
+
+    if dtype is not None:
+        if isinstance(element, dtype):
+            element = (element,)
+
+    if isinstance(element, (basestring, np.ndarray)):
+        it = iter([element])
+    else:
+        try:
+            it = iter(element)
+        except TypeError:
+            it = iter([element])
+
+    return it

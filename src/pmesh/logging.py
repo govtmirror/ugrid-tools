@@ -19,25 +19,30 @@ def formatter(record, handler):
     return msg
 
 
-if os.environ.get('PMESH_LOGGING_STDOUT', 'true').lower() != 'false':
-    sh = StreamHandler(sys.stdout, bubble=True)
-    sh.formatter = formatter
-    # sh.format_string += ' (rank={})'.format(MPI_RANK)
-    sh.push_application()
-
-fh_directory = os.environ.get('PMESH_LOGGING_DIR', os.path.expanduser('~/sandbox'))
-fh_file_prefix = os.environ.get('PMESH_LOGGING_FILE_PREFIX', 'pmesh')
-fh = FileHandler(os.path.join(fh_directory, '{}-rank-{}.log'.format(fh_file_prefix, MPI_RANK)), bubble=True, mode='a')
-fh.formatter = formatter
-# fh.format_string += ' (rank={})'.format(MPI_RANK)
-fh.push_application()
-
 if 'PMESH_LOGGING_LEVEL' in os.environ:
     level = getattr(logbook, os.environ['PMESH_LOGGING_LEVEL'].upper())
 else:
     level = INFO
 
 log = Logger('pmesh', level=level)
+
+
+if os.environ.get('PMESH_LOGGING_STDOUT', 'true').lower() != 'false':
+    sh = StreamHandler(sys.stdout, bubble=True)
+    sh.formatter = formatter
+    # sh.format_string += ' (rank={})'.format(MPI_RANK)
+    log.handlers.append(sh)
+    # sh.push_application()
+
+fh_directory = os.environ.get('PMESH_LOGGING_DIR', os.path.expanduser('~/sandbox'))
+fh_file_prefix = os.environ.get('PMESH_LOGGING_FILE_PREFIX', 'pmesh')
+fh = FileHandler(os.path.join(fh_directory, '{}-rank-{}.log'.format(fh_file_prefix, MPI_RANK)), bubble=True, mode='a')
+fh.formatter = formatter
+# fh.format_string += ' (rank={})'.format(MPI_RANK)
+log.handlers.append(fh)
+
+
+# fh.push_application()
 
 
 class log_entry_exit(object):

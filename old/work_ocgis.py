@@ -1,10 +1,13 @@
 import tempfile
+
 import ocgis
 from ocgis.util.geom_cabinet import GeomCabinetIterator
-from dispatch import MPI_SIZE, MPI_RANK, MPI_COMM_WORLD
-from work import PATH_CATCHMENT_SHP, PATH_CLIMATE_DATA, PATH_SINGLEPART_SHAPEFILE, PATH_FAKE_DATA
-import numpy as np
-from work import log
+
+from dispatch import MPI_RANK, MPI_COMM_WORLD
+from work import PATH_CATCHMENT_SHP, PATH_FAKE_DATA
+
+
+# from work import log
 
 
 def area_weighted():

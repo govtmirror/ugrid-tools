@@ -1,6 +1,8 @@
 import os
+import re
 
 import numpy as np
+from logbook import DEBUG
 from netCDF4 import Dataset
 
 from pmesh.logging import log_entry_exit, log
@@ -18,19 +20,13 @@ def convert_to_singlepart():
     convert_multipart_to_singlepart(path_catchment_shp, path_singlepart_shp, new_uid_name='UGID')
 
 
-def test_permissions():
-    path = '/home/benkoziol/data/pmesh/nfie_out/foo.nc'
-    ds = Dataset(path, 'w')
-    ds.close()
-
-
 @log_entry_exit
-def convert_to_esmf_format(path_out_nc, path_in_shp, name_uid):
+def convert_to_esmf_format(path_out_nc, path_in_shp, name_uid, node_threshold=None):
     polygon_break_value = -8
 
     log.debug('loading flexible mesh')
     fm = FlexibleMesh.from_shapefile(path_in_shp, name_uid, use_ragged_arrays=True, with_connectivity=False,
-                                     allow_multipart=True)
+                                     allow_multipart=True, node_threshold=node_threshold)
 
     log.debug('writing flexible mesh')
     if MPI_RANK == 0:
@@ -53,26 +49,50 @@ def validate_esmf_format(ds, name_uid, path_in_shp):
     assert ds.dimensions['elementCount'].size == len(GeometryManager(name_uid, path=path_in_shp))
 
 
-if __name__ == '__main__':
+def convert_shapefiles(pred=None, node_threshold=None):
     # Run with MPI: mpirun -n 8 prep_shapefiles.py
 
-    nfie_version = 'v0.1.0.dev1-run2'
+    nfie_version = 'node-threshold-10000'
 
     name_uid = 'GRIDCODE'
-    storage_dir_shp = os.path.expanduser('~/storage/catchment_shapefiles')
-    storage_dir_esmf = os.path.expanduser('~/storage/catchment_esmf_format')
-    esmf_name_template = 'catchments_esmf_{cid}_{nfie_version}.nc'
+    storage_dir_shp = os.path.expanduser('/media/benkoziol/Extra Drive 1/data/nfie/linked_catchment_shapefiles')
+    storage_dir_esmf = os.path.expanduser('/media/benkoziol/Extra Drive 1/data/nfie/node-thresholded-10000')
+    esmf_name_template = 'esmf_format_{cid}_{nfie_version}.nc'
 
-    for catchment_directory in os.listdir(storage_dir_shp):
-        for dirpath, dirnames, filenames in os.walk(os.path.join(storage_dir_shp, catchment_directory)):
-            for fn in filenames:
-                if fn.endswith('.shp'):
-                    path_catchment_shp = os.path.join(dirpath, fn)
-                    esmf_name = esmf_name_template.format(cid=catchment_directory, nfie_version=nfie_version)
-                    path_esmf_format_nc = os.path.join(storage_dir_esmf, esmf_name)
-                    log.info('Converting {}'.format(path_catchment_shp))
-                    # log.debug((path_esmf_format_nc, path_catchment_shp, name_uid))
-                    try:
-                        convert_to_esmf_format(path_esmf_format_nc, path_catchment_shp, name_uid)
-                    except:
-                        log.exception(path_catchment_shp)
+    log.info('Starting conversion for: {}'.format(nfie_version))
+
+    for dirpath, dirnames, filenames in os.walk(os.path.join(storage_dir_shp, storage_dir_shp)):
+        for fn in filenames:
+            if fn.endswith('.shp'):
+                log.debug(fn)
+                if pred is not None and not pred(fn):
+                    continue
+                cid = re.search('linked_(.*).shp', fn).group(1)
+                path_catchment_shp = os.path.join(dirpath, fn)
+                esmf_name = esmf_name_template.format(cid=cid, nfie_version=nfie_version)
+                path_esmf_format_nc = os.path.join(storage_dir_esmf, esmf_name)
+                log.info('Converting {}'.format(path_catchment_shp))
+                # log.debug((path_esmf_format_nc, path_catchment_shp, name_uid))
+                try:
+                    convert_to_esmf_format(path_esmf_format_nc, path_catchment_shp, name_uid,
+                                           node_threshold=node_threshold)
+                except:
+                    log.exception(path_catchment_shp)
+
+
+if __name__ == '__main__':
+    # convert_shapefiles()
+    log.level = DEBUG
+
+
+    def f(filename):
+        want = ['GreatLakes', 'SourisRedRainy', 'RioGrande', 'PacificNorthwest']
+        ret = False
+        for w in want:
+            if w in filename:
+                ret = True
+                break
+        return ret
+
+
+    convert_shapefiles(pred=f, node_threshold=10000)

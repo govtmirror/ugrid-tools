@@ -4,11 +4,18 @@ import subprocess
 import tempfile
 from unittest import TestCase
 
+from logbook import DEBUG
+
 from pmesh.helpers import nc_scope
+from pmesh.logging import log
 
 
 class AbstractPmeshTest(TestCase):
     key = 'pmesh'
+
+    @property
+    def log(self):
+        return log
 
     @property
     def path_bin(self):
@@ -28,6 +35,9 @@ class AbstractPmeshTest(TestCase):
 
     def nc_scope(self, *args, **kwargs):
         return nc_scope(*args, **kwargs)
+
+    def set_debug(self):
+        self.log.level = DEBUG
 
     def setUp(self):
         self.path_current_tmp = tempfile.mkdtemp(prefix='{0}_test_'.format(self.key))

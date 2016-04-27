@@ -6,15 +6,14 @@ import numpy as np
 
 from pmesh.helpers import nc_scope
 from pmesh.logging import log, log_entry_exit
-from pmesh.prep.create_netcdf_data import get_exact_field
 from pmesh.pyugrid.flexible_mesh.mpi import MPI_RANK, create_sections, MPI_COMM, MPI_SIZE
 
 
 @log_entry_exit
 def create_weights_file(mpirun_exe_path, esmf_exe_path, path_in_source, path_in_esmf_format, path_out_weights_nc, n=8):
-    if mpirun_exe_path is not None:
-        assert os.path.exists(mpirun_exe_path)
-    assert os.path.exists(esmf_exe_path)
+    # if mpirun_exe_path is not None:
+    #     assert os.path.exists(mpirun_exe_path)
+    # assert os.path.exists(esmf_exe_path)
     assert os.path.exists(path_in_source)
     assert os.path.exists(path_in_esmf_format)
     assert os.path.exists(os.path.split(path_out_weights_nc)[0])
@@ -147,34 +146,34 @@ if __name__ == '__main__':
     #                             element_area.long_name = 'Element area in native units.'
 
     # Calculate errors for exact field.
-    variable_name = 'pr'
-    ses = []
-    areas = []
-    for fn in os.listdir(output_data_directory):
-        if fn.startswith('pr_weighted'):
-            output = os.path.join(output_data_directory, fn)
-            max_se = 1e-4
-            max_rmse = 1e-4
-            with nc_scope(output) as ds:
-                exact_weighted = ds.variables[variable_name][0, :]
-                coords = ds.variables['centerCoords'][:]
-                areas += ds.variables['elementArea'][:].tolist()
-            coords[:, 0] += 360.
-            coords *= 0.0174533
-            exact_centers = get_exact_field(coords[:, 1], coords[:, 0])
-            se = (exact_weighted - exact_centers) ** 2
-            ses += se.tolist()
-
-    # This is for area weighting the errors. Very little effect observed.
-    # mse = np.average(ses, weights=(1 - np.array(areas)))
-    # This is standard mean error.
-    mse = np.mean(ses)
-    rmse = np.sqrt(mse)
-
-    log.info('Element count={}'.format(len(ses)))
-    log.info('Max RSE={}'.format(np.array(np.sqrt(ses)).max()))
-    log.info('Min RSE={}'.format(np.array(np.sqrt(ses)).min()))
-    log.info('RMSE={}'.format(rmse))
-    log.info('NRMSE={}'.format(rmse / (exact_weighted.max() - exact_weighted.min())))
-
-    log.info('core_esmf success')
+    # variable_name = 'pr'
+    # ses = []
+    # areas = []
+    # for fn in os.listdir(output_data_directory):
+    #     if fn.startswith('pr_weighted'):
+    #         output = os.path.join(output_data_directory, fn)
+    #         max_se = 1e-4
+    #         max_rmse = 1e-4
+    #         with nc_scope(output) as ds:
+    #             exact_weighted = ds.variables[variable_name][0, :]
+    #             coords = ds.variables['centerCoords'][:]
+    #             areas += ds.variables['elementArea'][:].tolist()
+    #         coords[:, 0] += 360.
+    #         coords *= 0.0174533
+    #         exact_centers = get_exact_field(coords[:, 1], coords[:, 0])
+    #         se = (exact_weighted - exact_centers) ** 2
+    #         ses += se.tolist()
+    #
+    # # This is for area weighting the errors. Very little effect observed.
+    # # mse = np.average(ses, weights=(1 - np.array(areas)))
+    # # This is standard mean error.
+    # mse = np.mean(ses)
+    # rmse = np.sqrt(mse)
+    #
+    # log.info('Element count={}'.format(len(ses)))
+    # log.info('Max RSE={}'.format(np.array(np.sqrt(ses)).max()))
+    # log.info('Min RSE={}'.format(np.array(np.sqrt(ses)).min()))
+    # log.info('RMSE={}'.format(rmse))
+    # log.info('NRMSE={}'.format(rmse / (exact_weighted.max() - exact_weighted.min())))
+    #
+    # log.info('core_esmf success')

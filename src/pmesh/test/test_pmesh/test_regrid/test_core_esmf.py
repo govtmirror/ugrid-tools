@@ -2,7 +2,6 @@ import os
 from subprocess import check_output
 
 import numpy as np
-from ocgis import OcgOperations
 
 from pmesh.prep.create_netcdf_data import create_source_netcdf_data, get_exact_field
 from pmesh.prep.prep_shapefiles import convert_to_esmf_format
@@ -53,8 +52,8 @@ class Test(AbstractPmeshTest):
     def test_weighted_output(self):
         path_in_shp = os.path.join(self.path_bin, 'nhd_catchments_texas', 'nhd_catchments_texas.shp')
         name_uid = 'GRIDCODE'
-        esmf_exe_path = check_output(['which', 'ESMF_RegridWeightGen']).strip()
-        mpirun_exe_path = check_output(['which', 'mpirun']).strip()
+        esmf_exe_path = '/home/benkoziol/anaconda2/envs/pmesh/bin/ESMF_RegridWeightGen'
+        mpirun_exe_path = '/home/benkoziol/anaconda2/envs/pmesh/bin/mpirun'
         variable_name = 'exact'
 
         path_output_data = self.get_temporary_file_path('weighted_esmf_format.nc')
@@ -68,8 +67,8 @@ class Test(AbstractPmeshTest):
         col = np.arange(-95.0477, -94.7965 + 0.01, 0.01)
 
         create_source_netcdf_data(path_src, row=row, col=col, exact=True, variable_name=variable_name)
-        OcgOperations(dataset={'uri': path_src}, snippet=True, output_format='shp', prefix='exact',
-                      dir_output=self.path_current_tmp).execute()
+        # OcgOperations(dataset={'uri': path_src}, snippet=True, output_format='shp', prefix='exact',
+        #               dir_output=self.path_current_tmp).execute()
 
         convert_to_esmf_format(path_in_esmf_format, path_in_shp, name_uid)
         create_weights_file(mpirun_exe_path, esmf_exe_path, path_src, path_in_esmf_format, path_out_weights_nc, n=1)

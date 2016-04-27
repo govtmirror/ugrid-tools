@@ -24,3 +24,8 @@ git checkout 1.6.3
 export GDAL_CONFIG=/glade/apps/opt/gdal/1.10.0/intel/12.1.5/bin/gdal-config
 python setup.py build
 #$PYTHON setup.py build_ext -I$PREFIX/include -L$PREFIX/lib -lgdal install --single-version-externally-managed --record record.txt
+
+cd ~/src
+git clone https://github.com/mewwts/addict.git
+cd addict
+python setup.py build

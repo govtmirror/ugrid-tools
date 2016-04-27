@@ -61,7 +61,7 @@ class FlexibleMesh(UGrid):
 
     @classmethod
     def from_shapefile(cls, path, name_uid, mesh_name='mesh', path_rtree=None, use_ragged_arrays=False,
-                       with_connectivity=True, allow_multipart=False):
+                       with_connectivity=True, allow_multipart=False, node_threshold=None):
         """
         Create a flexible mesh from a target shapefile.
 
@@ -84,7 +84,8 @@ class FlexibleMesh(UGrid):
         # tdk: update doc
         from helpers import GeometryManager
 
-        gm = GeometryManager(name_uid, path=path, path_rtree=path_rtree, allow_multipart=allow_multipart)
+        gm = GeometryManager(name_uid, path=path, path_rtree=path_rtree, allow_multipart=allow_multipart,
+                             node_threshold=node_threshold)
         ret = get_flexible_mesh(gm, mesh_name, use_ragged_arrays, with_connectivity=with_connectivity)
 
         return ret
