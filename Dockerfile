@@ -10,7 +10,7 @@ RUN apt-get clean
 
 RUN conda update -y --all
 RUN conda install -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis nose
-RUN pip install ipdb logbook
+RUN pip install ipdb logbook addict
 
 COPY . /tmp/pmesh
 RUN cd /opt && git clone /tmp/pmesh

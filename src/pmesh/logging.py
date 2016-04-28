@@ -34,7 +34,7 @@ if os.environ.get('PMESH_LOGGING_STDOUT', 'true').lower() != 'false':
     log.handlers.append(sh)
     # sh.push_application()
 
-fh_directory = os.environ.get('PMESH_LOGGING_DIR', os.path.expanduser('~/sandbox'))
+fh_directory = os.environ.get('PMESH_LOGGING_DIR', os.getcwd())
 fh_file_prefix = os.environ.get('PMESH_LOGGING_FILE_PREFIX', 'pmesh')
 fh = FileHandler(os.path.join(fh_directory, '{}-rank-{}.log'.format(fh_file_prefix, MPI_RANK)), bubble=True, mode='a')
 fh.formatter = formatter
