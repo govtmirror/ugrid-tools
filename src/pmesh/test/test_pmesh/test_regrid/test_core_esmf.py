@@ -53,7 +53,9 @@ class Test(AbstractPmeshTest):
         path_in_shp = os.path.join(self.path_bin, 'nhd_catchments_texas', 'nhd_catchments_texas.shp')
         name_uid = 'GRIDCODE'
         esmf_exe_path = '/home/benkoziol/anaconda2/envs/pmesh/bin/ESMF_RegridWeightGen'
+        # esmf_exe_path = 'ESMF_RegridWeightGen'
         mpirun_exe_path = '/home/benkoziol/anaconda2/envs/pmesh/bin/mpirun'
+        # mpirun_exe_path = 'mpirun'
         variable_name = 'exact'
 
         path_output_data = self.get_temporary_file_path('weighted_esmf_format.nc')
