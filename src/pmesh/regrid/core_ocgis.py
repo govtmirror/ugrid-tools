@@ -4,7 +4,11 @@ from os.path import expanduser, join
 from subprocess import check_output
 
 import fiona
+import numpy as np
+from addict import Dict
 from logbook import INFO
+from ocgis import RequestDataset
+from ocgis.new_interface.variable import VariableCollection, Variable
 
 from pmesh.helpers import nc_scope
 from pmesh.logging import log
@@ -25,7 +29,56 @@ def create_linked_shapefile(name_uid, output_variable, path_in_shp, path_linked_
                     sink.write(record)
 
 
-if __name__ == '__main__':
+def create_merged_weights(weight_files, esmf_unstructured, master_weights):
+    """
+    Create a merged weight file containing some variables from the original ESMF mesh files.
+
+    :param weight_files: sequence of file paths to the ESMF weight files
+    :param esmf_unstructured:  sequence of file paths to the ESMF unstructured files (This sequence must be in the same
+        order as ``weight_files``. The indexed weight file must have been created from the indexed ESMF unstructured.)
+    :param master_weights: file path to the merged, master weights file
+    """
+
+    master_map = {}
+    current_global_index = 1
+    new_weight_file = Dict({'row': [], 'col': [], 'S': [], 'GRIDCODE': [], 'centerCoords': np.empty((0, 2))})
+    new_dimensions = Dict({'row': 'n_s', 'col': 'n_s', 'S': 'n_s', 'GRIDCODE': 'elementCount',
+                           'centerCoords': ('elementCount', 'coordDim')})
+
+    for uid, (w, e) in enumerate(zip(weight_files, esmf_unstructured)):
+        w = RequestDataset(w).get()
+        e = RequestDataset(e).get()
+
+        for row_value in w['row'].value.flat:
+            if (uid, row_value) not in master_map:
+                master_map[(uid, row_value)] = current_global_index
+                current_global_index += 1
+            new_weight_file.row.append(master_map[(uid, row_value)])
+
+        new_weight_file.col += w['col'].value.tolist()
+        new_weight_file.S += w['S'].value.tolist()
+
+        new_weight_file.GRIDCODE += e['GRIDCODE'].value.tolist()
+        new_weight_file.centerCoords = np.vstack((new_weight_file.centerCoords, e['centerCoords'].value))
+
+    vc = VariableCollection()
+    for k, v in new_weight_file.items():
+        new_var = Variable(name=k, value=v, dimensions=new_dimensions[k])
+        vc.add_variable(new_var)
+
+    vc.attrs['coordDim'] = "longitude latitude"
+    vc.attrs['description'] = "Merged ESMF weights file with auxiliary variables."
+
+    vc['GRIDCODE'].attrs['long_name'] = 'Element unique identifier.'
+    vc['centerCoords'].units = 'degrees'
+    vc['row'].attrs['long_name'] = 'ESMF index to destination array.'
+    vc['col'].attrs['long_name'] = 'ESMF index to source array.'
+    vc['S'].attrs['long_name'] = 'ESMF weight factor.'
+
+    vc.write(master_weights)
+
+
+def run_create_linked_shapefile():
     log.level = INFO
     name_uid = 'GRIDCODE'
     output_variable = 'pr'
@@ -53,3 +106,6 @@ if __name__ == '__main__':
         log.info('Creating linked shapefile for: {}'.format(path_output_data))
         create_linked_shapefile(name_uid, output_variable, path_in_shp, path_linked_shp, path_output_data)
 
+
+if __name__ == '__main__':
+    pass
