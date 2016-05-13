@@ -44,18 +44,24 @@ def create_merged_weights(weight_files, esmf_unstructured, master_weights):
     new_weight_file = Dict({'row': [], 'col': [], 'S': [], 'GRIDCODE': [], 'centerCoords': np.empty((0, 2))})
     new_dimensions = Dict({'row': 'n_s', 'col': 'n_s', 'S': 'n_s', 'GRIDCODE': 'elementCount',
                            'centerCoords': ('elementCount', 'coordDim')})
+    new_dtype = {'row': np.int32, 'col': np.int32, 'S': np.float64}
 
     for uid, (w, e) in enumerate(zip(weight_files, esmf_unstructured)):
+        log.info('Merge is processing weight file: {}'.format(w))
+        log.info('Merge is processing ESMF unstructured file: {}'.format(e))
         w = RequestDataset(w).get()
         e = RequestDataset(e).get()
 
         for row_value in w['row'].value.flat:
+            if row_value < 0:
+                raise ValueError('"row" value must be greater than or equal to 1 to qualify as a Fortran index.')
             if (uid, row_value) not in master_map:
                 master_map[(uid, row_value)] = current_global_index
                 current_global_index += 1
             new_weight_file.row.append(master_map[(uid, row_value)])
 
         new_weight_file.col += w['col'].value.tolist()
+        # new_weight_file.row += w['row'].value.tolist()
         new_weight_file.S += w['S'].value.tolist()
 
         new_weight_file.GRIDCODE += e['GRIDCODE'].value.tolist()
@@ -63,8 +69,10 @@ def create_merged_weights(weight_files, esmf_unstructured, master_weights):
 
     vc = VariableCollection()
     for k, v in new_weight_file.items():
-        new_var = Variable(name=k, value=v, dimensions=new_dimensions[k])
+        new_var = Variable(name=k, value=v, dimensions=new_dimensions[k], dtype=new_dtype.get(k))
         vc.add_variable(new_var)
+
+    assert np.all(vc['row'].value >= 1)
 
     vc.attrs['coordDim'] = "longitude latitude"
     vc.attrs['description'] = "Merged ESMF weights file with auxiliary variables."
