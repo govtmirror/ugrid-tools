@@ -621,22 +621,19 @@ def get_node_count(geom):
 
 
 def get_split_polygons(geom, split_shape):
-    # tdk: doc
-    from ocgis import VectorDimension
-    from ocgis import SpatialGridDimension
-    from ocgis import SpatialDimension
+    from ocgis.new_interface.variable import Variable
+    from ocgis.new_interface.grid import GridXY
 
     log.debug('geom bounds: {}'.format(geom.bounds))
     minx, miny, maxx, maxy = geom.bounds
     rows = np.linspace(miny, maxy, split_shape[0])
     cols = np.linspace(minx, maxx, split_shape[1])
 
-    row = VectorDimension(value=rows)
-    col = VectorDimension(value=cols)
-    grid = SpatialGridDimension(row=row, col=col)
-    grid.set_extrapolated_corners()
-    spatial = SpatialDimension(grid=grid)
-    return spatial.geom.polygon.value.flatten().tolist()
+    row = Variable(value=rows, name='row', dimensions='row')
+    col = Variable(value=cols, name='col', dimensions='col')
+    grid = GridXY(col, row)
+    grid.set_extrapolated_bounds('x', 'y', 'corners')
+    return grid.polygon.value.flatten().tolist()
 
 
 def get_iter(element, dtype=None):

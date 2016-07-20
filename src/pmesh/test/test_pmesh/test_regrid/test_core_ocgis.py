@@ -25,4 +25,3 @@ class Test(AbstractPmeshTest):
             # The maximum index should be greater than the element count in the original file.
             self.assertTrue(np.any(ds.variables['row'][:] > 43))
 
-        self.fail()
