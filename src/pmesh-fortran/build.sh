@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 export PREFIX=/home/benkoziol/anaconda2/envs/pmesh-fortran
 export WD=/home/benkoziol/l/project/pmesh/src/pmesh-fortran
 #export PROGRAM_FILENAME=example_netcdf_read.f
