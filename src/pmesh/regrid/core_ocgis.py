@@ -9,10 +9,10 @@ from addict import Dict
 from logbook import INFO
 from ocgis import RequestDataset
 from ocgis.new_interface.variable import VariableCollection, Variable
+from pyugrid.flexible_mesh.mpi import MPI_RANK, MPI_COMM, create_sections
 
 from pmesh.helpers import nc_scope
 from pmesh.logging import log
-from pmesh.pyugrid.flexible_mesh.mpi import MPI_RANK, MPI_COMM, create_sections
 
 
 def create_linked_shapefile(name_uid, output_variable, path_in_shp, path_linked_shp, path_output_data):

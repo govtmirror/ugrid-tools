@@ -2,10 +2,10 @@ import os
 from subprocess import check_output
 
 import numpy as np
+from pyugrid.flexible_mesh.mpi import MPI_RANK, MPI_COMM
 
 from pmesh.prep.create_netcdf_data import create_source_netcdf_data, get_exact_field
 from pmesh.prep.prep_shapefiles import convert_to_esmf_format
-from pmesh.pyugrid.flexible_mesh.mpi import MPI_RANK, MPI_COMM
 from pmesh.regrid.core_esmf import create_weights_file, created_weighted_output, validate_weighted_output
 from pmesh.regrid.core_ocgis import create_linked_shapefile
 from pmesh.test.base import AbstractPmeshTest, attr

@@ -3,10 +3,10 @@ import shutil
 import subprocess
 
 import numpy as np
+from pyugrid.flexible_mesh.mpi import MPI_RANK, create_sections, MPI_COMM, MPI_SIZE
 
 from pmesh.helpers import nc_scope
 from pmesh.logging import log, log_entry_exit
-from pmesh.pyugrid.flexible_mesh.mpi import MPI_RANK, create_sections, MPI_COMM, MPI_SIZE
 
 
 @log_entry_exit

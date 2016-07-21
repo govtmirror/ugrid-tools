@@ -4,12 +4,12 @@ import re
 import numpy as np
 from logbook import DEBUG
 from netCDF4 import Dataset
+from pyugrid.flexible_mesh.core import FlexibleMesh
+from pyugrid.flexible_mesh.helpers import convert_multipart_to_singlepart, flexible_mesh_to_esmf_format, \
+    GeometryManager
+from pyugrid.flexible_mesh.mpi import MPI_RANK
 
 from pmesh.logging import log_entry_exit, log
-from pmesh.pyugrid.flexible_mesh.core import FlexibleMesh
-from pmesh.pyugrid.flexible_mesh.helpers import convert_multipart_to_singlepart, flexible_mesh_to_esmf_format, \
-    GeometryManager
-from pmesh.pyugrid.flexible_mesh.mpi import MPI_RANK
 
 
 def convert_to_singlepart():
