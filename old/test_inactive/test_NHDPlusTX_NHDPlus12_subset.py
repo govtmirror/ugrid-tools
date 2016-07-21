@@ -1,18 +1,18 @@
 import itertools
-import os
-from functools import partial
+from mpi4py import MPI
 
 import ESMF
 import fiona
 import numpy as np
 import ocgis
-from mpi4py import MPI
+import os
+from functools import partial
 from ocgis.util.geom_cabinet import GeomCabinetIterator
 from pyugrid import FlexibleMesh
 from shapely.geometry import Point, mapping
 
-from pmesh.regrid.core_esmpy import get_dstfield, get_esmf_grid_src, get_field_src
-from pmesh.test.base import AbstractPmeshTest
+from fmtools.regrid.core_esmpy import get_dstfield, get_esmf_grid_src, get_field_src
+from fmtools.test.base import AbstractFMToolsTest
 
 COMM = MPI.COMM_WORLD
 RANK = COMM.Get_rank()
@@ -29,7 +29,7 @@ NAME_UID = 'UGID'
 NETCDF_FORMAT = 'NETCDF3_CLASSIC'
 
 
-class Test(AbstractPmeshTest):
+class Test(AbstractFMToolsTest):
 
     def create_ugrid_netcdf(self, in_shp=PATH_CATCHMENTS_SUBSET, out_nc=PATH_UGRID_NC, name_uid=NAME_UID):
         """Create a UGRID netcdf file from an input singlepart shapefile."""

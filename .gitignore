@@ -63,3 +63,13 @@ target/
 # ESMF logs
 *.Log
 *ESMF_LogFile
+
+.idea
+qgis
+*.noseids
+*.f~
+*.sqlite
+*.ods#
+src/fmtools-fortran/simple_xy.nc
+bin/
+*.sh~

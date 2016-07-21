@@ -8,13 +8,13 @@ import fiona
 from shapely.geometry import shape, MultiPolygon, mapping
 from shapely.geometry.polygon import orient
 
-from pmesh.test.base import AbstractPmeshTest
+from fmtools.test.base import AbstractFMToolsTest
 import numpy as np
-from pmesh.logging import log
+from fmtools.logging import log
 from pyugrid.flexible_mesh.helpers import get_oriented_and_valid_geometry
 
 
-class Test(AbstractPmeshTest):
+class Test(AbstractFMToolsTest):
 
     def test_ccw(self):
         """Test polygons can be oriented counter-clockwise."""

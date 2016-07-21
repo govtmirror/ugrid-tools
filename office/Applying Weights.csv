@@ -1,0 +1,22 @@
+Active,Name,"Create Weights (Minutes, 128 Cores)",Apply Weights – 128 Cores (Seconds),Cluster,Queue
+1,03W-SouthAtlanticWest,0.6,3.8,yellowstone,economy
+1,10L-LowerMissouri,4.4,5.3,yellowstone,economy
+1,11-ArkRedWhite,3.6,5.9,yellowstone,economy
+1,02-MidAtlantic,1.0,5.3,yellowstone,economy
+1,04-GreatLakes,13.7,3.3,yellowstone,economy
+1,05-Ohio,0.9,5.7,yellowstone,economy
+1,10U-UpperMissouri,7.9,7.0,yellowstone,economy
+1,01-Northeast,2.6,5.4,yellowstone,economy
+1,08-LowerMississippi,1.0,6.9,yellowstone,economy
+1,12-Texas,7.6,5.7,yellowstone,economy
+1,03N-SouthAtlanticNorth,0.7,7.0,yellowstone,economy
+1,06-Tennessee,0.4,4.9,yellowstone,economy
+1,14-UpperColorado,0.7,3.8,yellowstone,economy
+1,18-California,6.4,6.9,yellowstone,economy
+1,03S-SouthAtlanticSouth,1.7,2.7,yellowstone,economy
+1,15-LowerColorado,1.7,3.6,yellowstone,economy
+1,16-GreatBasin,8.2,5.8,yellowstone,economy
+1,07-UpperMississippi,1.1,4.7,yellowstone,economy
+1,09-SourisRedRainy,22.0,5.0,yellowstone,economy
+1,13-RioGrande,131.3,4.0,yellowstone,economy
+1,17-PacificNorthwest,83.0,10.0,yellowstone,economy
