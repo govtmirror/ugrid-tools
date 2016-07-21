@@ -2,6 +2,8 @@ FROM continuumio/anaconda
 
 MAINTAINER ben.koziol@noaa.gov
 
+ENV GDAL_DATA /opt/conda/share/gdal
+
 RUN apt-get -y update
 RUN apt-get -y upgrade
 RUN apt-get -y install build-essential \
