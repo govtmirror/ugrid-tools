@@ -1,5 +1,6 @@
-import click
 import os
+
+import click
 
 from fmtools.logging import log_fmtools
 
@@ -11,12 +12,12 @@ def fmtools_cli():
     pass
 
 
-@fmtools_cli.command(help='Create ESMF unstructured file for polygon ESRI Shapefile.')
+@fmtools_cli.command(help='Create ESMF unstructured NetCDF files from polygon ESRI Shapefiles.')
 @click.option('-u', '--source_uid', required=True, help='Name of unique identifier in source shapefile.')
 @click.option('-s', '--source', type=click.Path(exists=True), required=True,
               help='Path to input shapefile.')
 @click.option('-e', '--esmf_format', type=click.Path(writable=True), required=True,
-              help='Path to the output ESMF unstructured netCDF file.')
+              help='Path to the output ESMF unstructured NetCDF file.')
 @click.option('-n', '--node-threshold', type=int, default=DEFAULT_NODE_THRESHOLD,
               help='(default={}) Approximate limit on the number of nodes in an element part. The default node '
                    'threshold provides significant performance improvement.'.format(DEFAULT_NODE_THRESHOLD))
@@ -28,7 +29,7 @@ def convert(source_uid, source, esmf_format, node_threshold):
     log_fmtools('info', 'Finished converting shapefile to ESMF format: {}'.format(source), rank=0)
 
 
-@fmtools_cli.command(help='Create merged ESMF weights file.')
+@fmtools_cli.command(help='Create a merged ESMF weights file.')
 @click.option('-c', '--catchment-directory', required=True,
               help='Path to the directory containing the ESMF unstructured files.')
 @click.option('-w', '--weight-directory', type=click.Path(exists=True), required=True,
@@ -57,13 +58,13 @@ def merge(catchment_directory, weight_directory, master_path):
 
 @fmtools_cli.command(help='Apply weights to a source variable.')
 @click.option('-s', '--source', type=click.Path(exists=True), required=True,
-              help='Path to source netCDF file containing field values.')
+              help='Path to source NetCDF file containing field values.')
 @click.option('-n', '--name', type=str, required=True,
-              help='Name of the variable in the source netCDF file to weight.')
+              help='Name of the variable in the source NetCDF file to weight.')
 @click.option('-w', '--weights', type=click.Path(exists=True), required=True,
-              help='Path to output weights netCDF file.')
+              help='Path to output weights NetCDF file.')
 @click.option('-e', '--esmf_format', type=click.Path(exists=True), required=True,
-              help='Path to ESMF unstructured netCDF file.')
+              help='Path to ESMF unstructured NetCDF file.')
 @click.option('-o', '--output', type=click.Path(writable=True), required=True,
               help='Path to the output file.')
 def apply(source, name, weights, esmf_format, output):
