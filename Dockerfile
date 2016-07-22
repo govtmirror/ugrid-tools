@@ -23,5 +23,5 @@ RUN rm -r /tmp/deps
 #COPY . /tmp/fmtools
 #RUN cd /opt && git clone -b next /tmp/fmtools
 #RUN rm -r /tmp/fmtools
-RUN cd /opt && git clone -b next https://github.com/NESII/fm-tools.git
+RUN cd /opt && git clone -b master https://github.com/NESII/fm-tools.git
 RUN cd /opt/fm-tools && bash test.sh

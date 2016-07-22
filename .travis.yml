@@ -1,0 +1,27 @@
+language: python
+
+sudo: false
+
+env:
+  - CONDA_PYTHON="python=2.7"
+
+before_install:
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update --all --yes
+  - conda info -a
+
+install:
+  - conda create -n test -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis nose scipy
+  - source activate test
+  - conda remove -y ocgis
+  - pip install logbook addict
+  - git clone -b pmesh-ugrid-nfie https://github.com/NCPP/ocgis.git && cd ocgis && python setup.py install
+  - git clone -b flexible-mesh https://github.com/NESII/pyugrid.git && cd pyugrid && python setup.py install
+  - git clone -b master https://github.com/NESII/fm-tools.git && cd fm-tools
+
+script:
+  - bash test.sh
