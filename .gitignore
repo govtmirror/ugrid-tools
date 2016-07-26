@@ -71,5 +71,4 @@ qgis
 *.sqlite
 *.ods#
 src/fmtools-fortran/simple_xy.nc
-bin/
 *.sh~

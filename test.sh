@@ -20,7 +20,7 @@ SOURCE_SHP_UID=GRIDCODE
 ESMF_FORMAT_FILE=${TESTTMPDIR}/test_esmf_format.nc
 WEIGHTS=${TESTTMPDIR}/test_weights.nc
 OUTPUT=${TESTTMPDIR}/test_weighted_output.nc
-CLI='python src/utools_cli.py'
+CLI='python src/utools_cli'
 
 mpirun -n 8 ${CLI} convert -u ${SOURCE_SHP_UID} -s ${SOURCE_SHP} -e ${ESMF_FORMAT_FILE} && \
 mpirun -n 8 ESMF_RegridWeightGen -s ${SOURCE_FIELD} -d ${ESMF_FORMAT_FILE} -w ${WEIGHTS} -m conserve \
