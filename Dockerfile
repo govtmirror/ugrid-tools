@@ -22,7 +22,10 @@ RUN rm -r /tmp/deps
 #COPY . /tmp/utools
 #RUN cd /opt && git clone -b next /tmp/utools
 #RUN rm -r /tmp/utools
-RUN cd /opt && git clone -b master https://github.com/NESII/ugrid-tools.git
-RUN cd /opt/fm-tools && bash test.sh
+
+RUN git clone -b master https://github.com/NESII/ugrid-tools.git
+WORKDIR ugrid-tools
+RUN bash test.sh
 RUN python setup.py install
+RUN python -c "import utools"
 RUN utools_cli --help
