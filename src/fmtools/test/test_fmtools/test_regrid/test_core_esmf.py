@@ -1,8 +1,9 @@
-import numpy as np
 import os
-from pyugrid.flexible_mesh.mpi import MPI_RANK, MPI_COMM
 from subprocess import check_output
 
+import numpy as np
+
+from fmtools.io.mpi import MPI_RANK, MPI_COMM
 from fmtools.prep.create_netcdf_data import create_source_netcdf_data, get_exact_field
 from fmtools.prep.prep_shapefiles import convert_to_esmf_format
 from fmtools.regrid.core_esmf import create_weights_file, created_weighted_output, validate_weighted_output

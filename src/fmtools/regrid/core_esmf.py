@@ -1,10 +1,11 @@
-import numpy as np
 import os
 import shutil
 import subprocess
-from pyugrid.flexible_mesh.mpi import MPI_RANK, create_sections, MPI_COMM, MPI_SIZE
+
+import numpy as np
 
 from fmtools.helpers import nc_scope
+from fmtools.io.mpi import MPI_RANK, create_sections, MPI_COMM, MPI_SIZE
 from fmtools.logging import log, log_entry_exit
 
 

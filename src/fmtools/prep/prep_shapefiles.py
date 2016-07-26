@@ -1,14 +1,13 @@
+import os
+import re
+
+import numpy as np
 from logbook import DEBUG
 from netCDF4 import Dataset
 
-import numpy as np
-import os
-import re
-from pyugrid.flexible_mesh.core import FlexibleMesh
-from pyugrid.flexible_mesh.helpers import convert_multipart_to_singlepart, flexible_mesh_to_esmf_format, \
-    GeometryManager
-from pyugrid.flexible_mesh.mpi import MPI_RANK
-
+from fmtools.io.core import from_shapefile
+from fmtools.io.helpers import convert_multipart_to_singlepart, convert_collection_to_esmf_format, GeometryManager
+from fmtools.io.mpi import MPI_RANK
 from fmtools.logging import log_entry_exit, log
 
 
@@ -25,14 +24,13 @@ def convert_to_esmf_format(path_out_nc, path_in_shp, name_uid, node_threshold=No
     polygon_break_value = -8
 
     log.debug('loading flexible mesh')
-    fm = FlexibleMesh.from_shapefile(path_in_shp, name_uid, use_ragged_arrays=True, with_connectivity=False,
-                                     allow_multipart=True, node_threshold=node_threshold)
-
+    coll = from_shapefile(path_in_shp, name_uid, use_ragged_arrays=True, with_connectivity=False, allow_multipart=True,
+                          node_threshold=node_threshold)
     log.debug('writing flexible mesh')
     if MPI_RANK == 0:
         ds = Dataset(path_out_nc, 'w', format='NETCDF3_CLASSIC')
         try:
-            flexible_mesh_to_esmf_format(fm, ds, polygon_break_value=polygon_break_value, face_uid_name=name_uid)
+            convert_collection_to_esmf_format(coll, ds, polygon_break_value=polygon_break_value, face_uid_name=name_uid)
             validate_esmf_format(ds, name_uid, path_in_shp)
         finally:
             ds.close()
