@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup, Command, find_packages
 
-VERSION = '0.1.0.dev2'
+VERSION = '0.1.0.dev3'
 
 
 class UninstallCommand(Command):
