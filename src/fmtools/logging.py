@@ -1,11 +1,12 @@
+import functools
+import os
 import sys
 import time
-from logbook import Logger, StreamHandler, FileHandler, INFO
+
+from logbook import Logger, StreamHandler, FileHandler
 from mpi4py import MPI
 
-import functools
-import logbook
-import os
+from fmtools import env
 
 MPI_COMM = MPI.COMM_WORLD
 MPI_RANK = MPI_COMM.Get_rank()
@@ -19,22 +20,18 @@ def formatter(record, handler):
     return msg
 
 
-if 'FMTOOLS_LOGGING_LEVEL' in os.environ:
-    level = getattr(logbook, os.environ['FMTOOLS_LOGGING_LEVEL'].upper())
-else:
-    level = INFO
+level = env.LOGGING_LEVEL
+log = Logger(env.LOGGING_FILE_PREFIX, level=level)
 
-log = Logger('fmtools', level=level)
-
-if os.environ.get('FMTOOLS_LOGGING_STDOUT', 'true').lower() != 'false':
+if env.LOGGING_STDOUT:
     sh = StreamHandler(sys.stdout, bubble=True)
     sh.formatter = formatter
     # sh.format_string += ' (rank={})'.format(MPI_RANK)
     log.handlers.append(sh)
     # sh.push_application()
 
-fh_directory = os.environ.get('FMTOOLS_LOGGING_DIR', os.getcwd())
-fh_file_prefix = os.environ.get('FMTOOLS_LOGGING_FILE_PREFIX', 'fmtools')
+fh_directory = env.LOGGING_DIR
+fh_file_prefix = env.LOGGING_FILE_PREFIX
 fh = FileHandler(os.path.join(fh_directory, '{}-rank-{}.log'.format(fh_file_prefix, MPI_RANK)), bubble=True, mode='a')
 fh.formatter = formatter
 # fh.format_string += ' (rank={})'.format(MPI_RANK)
