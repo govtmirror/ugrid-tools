@@ -1,8 +1,8 @@
 [![Build Status](https://travis-ci.org/NESII/fm-tools.svg?branch=master)](https://travis-ci.org/NESII/fm-tools)
 
 ```
-$ python src/fmtools_cli.py convert --help
-Usage: fmtools_cli.py convert [OPTIONS]
+$ python utools_cli convert --help
+Usage: utools_cli convert [OPTIONS]
 
   Create ESMF unstructured NetCDF files from polygon ESRI Shapefiles.
 
@@ -20,8 +20,8 @@ Options:
 ```
 
 ```
-$ python src/fmtools_cli.py merge --help
-Usage: fmtools_cli.py merge [OPTIONS]
+$ utools_cli merge --help
+Usage: utools_cli merge [OPTIONS]
 
   Create a merged ESMF weights file.
 
