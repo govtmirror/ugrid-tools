@@ -1,9 +1,8 @@
 """Test writing to a netCDF4 variable using MPI."""
+import numpy as np
 from mpi4py import MPI
 
-import numpy as np
-
-from fmtools.test.base import AbstractFMToolsTest
+from utools.test.base import AbstractUToolsTest
 
 COMM = MPI.COMM_WORLD
 SIZE = COMM.Get_size()
@@ -11,7 +10,7 @@ STATUS = MPI.Status()
 RANK = COMM.Get_rank()
 
 
-class Test(AbstractFMToolsTest):
+class Test(AbstractUToolsTest):
 
     def test(self):
         name_var = 'pr'

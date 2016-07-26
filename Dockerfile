@@ -19,8 +19,8 @@ RUN mkdir -p /tmp/deps && cd /tmp/deps
 RUN git clone -b flexible-mesh https://github.com/NESII/pyugrid.git && cd pyugrid && python setup.py install
 RUN rm -r /tmp/deps
 
-#COPY . /tmp/fmtools
-#RUN cd /opt && git clone -b next /tmp/fmtools
-#RUN rm -r /tmp/fmtools
+#COPY . /tmp/utools
+#RUN cd /opt && git clone -b next /tmp/utools
+#RUN rm -r /tmp/utools
 RUN cd /opt && git clone -b master https://github.com/NESII/fm-tools.git
 RUN cd /opt/fm-tools && bash test.sh

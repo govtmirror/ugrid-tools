@@ -1,11 +1,12 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import os
 
-from fmtools.test.base import AbstractFMToolsTest
+import matplotlib.pyplot as plt
+import numpy as np
+
+from utools.test.base import AbstractUToolsTest
 
 
-class Test(AbstractFMToolsTest):
+class Test(AbstractUToolsTest):
 
     def test_from_file(self):
         path_output = os.path.expanduser('~/data/pmesh/nfie_out')
