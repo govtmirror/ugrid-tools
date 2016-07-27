@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/NESII/fm-tools.svg?branch=master)](https://travis-ci.org/NESII/fm-tools)
+[![Build Status](https://travis-ci.org/NESII/ugrid-tools.svg?branch=next)](https://travis-ci.org/NESII/ugrid-tools)
 
 ```
 $ utools_cli convert --help
