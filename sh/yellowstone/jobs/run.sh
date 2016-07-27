@@ -7,7 +7,7 @@ CATCHMENT_ID=( 13-RioGrande )
 #W=( 00:04 00:07 00:07 00:04 00:17 00:04 00:11 00:06 00:04 00:11 00:04 00:03 00:04 00:09 00:05 00:05 00:11 00:04 00:25 02:14 01:26 )
 W=( 00:30  )
 N=128
-JOB_DIR=/glade/u/home/benkoz/src/pmesh/sh/yellowstone/jobs
+JOB_DIR=/glade/u/home/benkoz/src/utools/sh/yellowstone/jobs
 STORAGE=/glade/p/work/benkoz/storage
 
 export PYTHONPATH=${PYTHONPATH}:/glade/u/home/benkoz/src/click/build/lib:/glade/u/home/benkoz/src/logbook/build/lib:/glade/u/home/benkoz/src/addict/build/lib
@@ -16,22 +16,22 @@ export PYTHONPATH=${PYTHONPATH}:/glade/u/home/benkoz/src/click/build/lib:/glade/
 
 export LOG_DIR=/glade/u/home/benkoz/logs/${J_PREFIX}
 export ESMF_EXE=/glade/u/home/benkoz/sandbox/esmf_HEAD/bin/ESMF_RegridWeightGen
-export PMESH_CLI=/glade/u/home/benkoz/src/pmesh/src/pmesh_cli.py
-export PMESH_LOGGING_DIR=${LOG_DIR}/pmesh
-export PMESH_LOGGING_LEVEL=info
-export PMESH_LOGGING_STDOUT=false
+export UTOOLS_CLI=/glade/u/home/benkoz/src/utools/src/utools_cli.py
+export UTOOLS_LOGGING_DIR=${LOG_DIR}/utools
+export UTOOLS_LOGGING_LEVEL=info
+export UTOOLS_LOGGING_STDOUT=false
 export SHAPEFILE_UID=GRIDCODE
 export SOURCE=${STORAGE}/exact_data/exact-conus-025degree_20160316-1737.nc
 export VARIABLE_NAME=pr
-o="${LOG_DIR}/jobs/pmesh.%J.out"
-e="${LOG_DIR}/jobs/pmesh.%J.err"
+o="${LOG_DIR}/jobs/utools.%J.out"
+e="${LOG_DIR}/jobs/utools.%J.err"
 
 # Create the logging directory failing if it already exists.
 if [ -d ${LOG_DIR} ]; then
     echo "Logging directory must not exist: ${LOG_DIR}"
     exit 1
 fi
-mkdir -p ${LOG_DIR}/jobs && mkdir -p ${LOG_DIR}/esmf && mkdir -p ${PMESH_LOGGING_DIR}
+mkdir -p ${LOG_DIR}/jobs && mkdir -p ${LOG_DIR}/esmf && mkdir -p ${UTOOLS_LOGGING_DIR}
 
 idx=0
 for catchment_id in "${CATCHMENT_ID[@]}"
@@ -42,7 +42,7 @@ do
     wall_time=${W[idx]}
 #    n=${N[idx]}
 
-    export PMESH_LOGGING_FILE_PREFIX=${j}
+    export UTOOLS_LOGGING_FILE_PREFIX=${j}
 #    export SHAPEFILE_SOURCE=${STORAGE}/catchment_shapefiles/linked_${catchment_id}.shp
     export DESTINATION=${STORAGE}/catchment_esmf_format/node-thresholded-10000/esmf_format_${catchment_id}_node-threshold-10000.nc
     #export DESTINATION=/glade/u/home/benkoz/storage/scratch/esmf_format_${CATCHMENT_ID}.nc

@@ -2,12 +2,12 @@
 
 
 #BSUB -P P35071400
-#BUSB -J pmesh-debug
+#BUSB -J utools-debug
 #BSUB -W 00:45
 #BSUB -n 32
 #BSUB -R "span[ptile=16]"
-#BSUB -o /glade/u/home/benkoz/logs/pmesh.%J.out
-#BSUB -e /glade/u/home/benkoz/logs/pmesh.%J.err
+#BSUB -o /glade/u/home/benkoz/logs/utools.%J.out
+#BSUB -e /glade/u/home/benkoz/logs/utools.%J.err
 #BSUB -q economy
 #BSUB -B
 

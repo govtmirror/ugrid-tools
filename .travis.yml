@@ -15,13 +15,15 @@ before_install:
   - conda info -a
 
 install:
-  - conda create -n test -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis nose scipy
+  - conda create -n test -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis nose
   - source activate test
   - conda remove -y ocgis
   - pip install logbook addict
   - git clone -b pmesh-ugrid-nfie https://github.com/NCPP/ocgis.git && cd ocgis && python setup.py install
-  - git clone -b flexible-mesh https://github.com/NESII/pyugrid.git && cd pyugrid && python setup.py install
-  - git clone -b master https://github.com/NESII/fm-tools.git && cd fm-tools
+  - git clone -b master https://github.com/NESII/ugrid-tools.git && cd ugrid-tools
 
 script:
   - bash test.sh
+  - python setup.py install
+  - python -c "import utools"
+  - utools_cli --help

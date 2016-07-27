@@ -9,5 +9,5 @@
 
 module load python/2.7.7 numpy/1.10.1 netcdf4python/1.2.1 mpi4py/2.0.0
 
-mpirun.lsf python ${PMESH_CLI} apply -s ${SOURCE} -n ${VARIABLE_NAME} -w ${WEIGHTS} -e ${DESTINATION} \
+mpirun.lsf python ${UTOOLS_CLI} apply -s ${SOURCE} -n ${VARIABLE_NAME} -w ${WEIGHTS} -e ${DESTINATION} \
     -o ${WEIGHTED_OUTPUT}
