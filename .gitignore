@@ -70,7 +70,7 @@ qgis
 *.f~
 *.sqlite
 *.ods#
-src/fmtools-fortran/simple_xy.nc
+misc/utools-fortran/simple_xy.nc
 *.sh~
 *.swp
 bin/
