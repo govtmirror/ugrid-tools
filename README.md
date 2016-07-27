@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/NESII/ugrid-tools.svg?branch=master)](https://travis-ci.org/NESII/ugrid-tools)
 
 ```
-$ python utools_cli convert --help
+$ utools_cli convert --help
 Usage: utools_cli convert [OPTIONS]
 
   Create ESMF unstructured NetCDF files from polygon ESRI Shapefiles.
