@@ -72,3 +72,4 @@ qgis
 *.ods#
 src/fmtools-fortran/simple_xy.nc
 *.sh~
+*.swp
