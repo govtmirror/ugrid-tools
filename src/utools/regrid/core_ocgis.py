@@ -5,9 +5,9 @@ from subprocess import check_output
 
 import fiona
 import numpy as np
-from addict import Dict
 from logbook import INFO
 
+from utools.addict import Dict
 from utools.helpers import nc_scope
 from utools.io.mpi import MPI_RANK, MPI_COMM, create_sections
 from utools.logging import log

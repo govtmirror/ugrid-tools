@@ -5,7 +5,6 @@ from copy import copy
 
 import fiona
 import numpy as np
-from addict import Dict
 from numpy.ma import MaskedArray
 from shapely.geometry import shape, mapping, Polygon, MultiPolygon
 from shapely.geometry.base import BaseMultipartGeometry
@@ -14,6 +13,7 @@ from shapely.geometry.polygon import orient
 from geom_cabinet import GeomCabinetIterator
 from mpi import MPI_RANK, create_sections, MPI_COMM, hgather, vgather, MPI_SIZE, dgather
 from spatial_index import SpatialIndex
+from utools.addict import Dict
 from utools.constants import UgridToolsConstants
 
 
