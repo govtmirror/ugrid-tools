@@ -1,4 +1,5 @@
 import os
+from unittest import SkipTest
 
 import numpy as np
 
@@ -8,6 +9,11 @@ from utools.test.base import AbstractUToolsTest
 
 class Test(AbstractUToolsTest):
     def test_create_merged_weights(self):
+        try:
+            import ocgis
+        except ImportError:
+            raise SkipTest('"ocgis" is not installed.')
+
         path_esmf_format = os.path.join(self.path_bin, 'test_esmf_format.nc')
         path_weights_nc = os.path.join(self.path_bin, 'test_weights.nc')
         master_weights = self.get_temporary_file_path('master_weights.nc')
@@ -24,4 +30,3 @@ class Test(AbstractUToolsTest):
             self.assertTrue(np.all(ds.variables['row'][:] < 87))
             # The maximum index should be greater than the element count in the original file.
             self.assertTrue(np.any(ds.variables['row'][:] > 43))
-

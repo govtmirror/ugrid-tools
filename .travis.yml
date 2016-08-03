@@ -15,14 +15,24 @@ before_install:
   - conda info -a
 
 install:
-  - conda create -n test -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis nose
-  - source activate test
+  - conda create -n test-with-ocgis -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis nose
+  - source activate test-with-ocgis
   - conda remove -y ocgis
   - pip install logbook addict
   - git clone -b pmesh-ugrid-nfie https://github.com/NCPP/ocgis.git && cd ocgis && python setup.py install
   - cd ..
+  - conda create -n test-without-ocgis -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis nose
+  - source activate test-without-ocgis
+  - conda remove -y ocgis
+  - pip install logbook addict
 
 script:
+  - source activate test-with-ocgis
+  - bash test.sh
+  - python setup.py install
+  - python -c "import utools"
+  - utools_cli --help
+  - source activate test-without-ocgis
   - bash test.sh
   - python setup.py install
   - python -c "import utools"

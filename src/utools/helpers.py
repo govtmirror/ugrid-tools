@@ -1,7 +1,10 @@
 import os
 from contextlib import contextmanager
 
+import fiona
 import netCDF4 as nc
+from fiona.crs import from_epsg
+from shapely.geometry import mapping
 
 
 @contextmanager
@@ -39,12 +42,11 @@ def write_fiona(target, filename_no_suffix, folder='~/htmp', crs=None):
     :param folder: Directory to write to.
     :param crs: The coordinate system of the geometry objects.
     """
-    from ocgis.new_interface.geom import GeometryVariable
-    from ocgis.interface.base.crs import WGS84
 
-    crs = crs or WGS84()
-
-    folder = os.path.expanduser(folder)
-    path = os.path.join(folder, '{}.shp'.format(filename_no_suffix))
-    gvar = GeometryVariable(value=target, crs=crs, geom_type='MultiPolygon')
-    gvar.write_fiona(path)
+    schema = {'geometry': 'MultiPolygon', 'properties': {}}
+    with fiona.open(os.path.expanduser(os.path.join(folder, '{}.shp'.format(filename_no_suffix))), mode='w',
+                    schema=schema,
+                    crs=from_epsg(4326), driver='ESRI Shapefile') as sink:
+        for geom in target:
+            feature = {'properties': {}, 'geometry': mapping(geom)}
+            sink.write(feature)

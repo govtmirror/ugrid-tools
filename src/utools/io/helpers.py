@@ -1,3 +1,4 @@
+import itertools
 import os
 from collections import deque, OrderedDict
 from copy import copy
@@ -5,6 +6,7 @@ from copy import copy
 import fiona
 import numpy as np
 from addict import Dict
+from numpy.ma import MaskedArray
 from shapely.geometry import shape, mapping, Polygon, MultiPolygon
 from shapely.geometry.base import BaseMultipartGeometry
 from shapely.geometry.polygon import orient
@@ -484,17 +486,17 @@ def convert_collection_to_esmf_format(fmobj, ds, polygon_break_value=None, start
     # faces = fmobj.faces
     # nodes = fmobj.nodes
 
-    face_areas = fmobj['face_areas'].value
-    face_coordinates = fmobj['face_coordinates'].value
+    face_areas = fmobj['face_areas']
+    face_coordinates = fmobj['face_coordinates']
     if face_uid_name is not None:
-        face_uid_value = fmobj[face_uid_name].value
+        face_uid_value = fmobj[face_uid_name]
     else:
         face_uid_value = None
-    faces = fmobj['face'].value
-    nodes = fmobj['nodes'].value
+    faces = fmobj['face']
+    nodes = fmobj['nodes']
 
-    float_dtype = np.float32
-    int_dtype = np.int32
+    # float_dtype = np.float32
+    # int_dtype = np.int32
 
     # Transform ragged array to one-dimensional array.
     num_element_conn_data = [e.shape[0] for e in faces.flat]
@@ -507,86 +509,85 @@ def convert_collection_to_esmf_format(fmobj, ds, polygon_break_value=None, start
 
     ####################################################################################################################
 
-    from ocgis.new_interface.variable import Variable, VariableCollection
-    coll = VariableCollection()
-
-    coll.add_variable(Variable('nodeCoords', value=nodes, dtype=float_dtype,
-                               dimensions=['nodeCount', 'coordDim'], units='degrees'))
-
-    elementConn = Variable('elementConn', value=element_conn_data, dimensions='connectionCount',
-                           attrs={'long_name': 'Node indices that define the element connectivity.',
-                                  'start_index': start_index})
-    if polygon_break_value is not None:
-        elementConn.attrs['polygon_break_value'] = polygon_break_value
-    coll.add_variable(elementConn)
-
-    coll.add_variable(Variable('numElementConn', value=num_element_conn_data, dimensions='elementCount',
-                               dtype=int_dtype, attrs={'long_name': 'Number of nodes per element.'}))
-
-    coll.add_variable(Variable('centerCoords', value=face_coordinates, dimensions=['elementCount', 'coordDim'],
-                               units='degrees', dtype=float_dtype))
-
-    if face_uid_name is not None:
-        coll.add_variable(Variable(face_uid_name, value=face_uid_value, dimensions='elementCount',
-                                   attrs={'long_name': 'Element unique identifier.'}))
-
-    coll.add_variable(Variable('elementArea', value=face_areas, dimensions='elementCount',
-                               attrs={'units': 'degrees', 'long_name': 'Element area in native units.'},
-                               dtype=float_dtype))
-
-    coll.attrs['gridType'] = 'unstructured'
-    coll.attrs['version'] = '0.9'
-    coll.attrs['coordDim'] = 'longitude latitude'
-
-    coll.write(ds)
-
-    # # Dimensions #######################################################################################################
+    # from ocgis.new_interface.variable import Variable, VariableCollection
+    # coll = VariableCollection()
     #
-    # node_count = ds.createDimension('nodeCount', nodes.shape[0])
-    # element_count = ds.createDimension('elementCount', faces.shape[0])
-    # coord_dim = ds.createDimension('coordDim', 2)
-    # # element_conn_vltype = ds.createVLType(fm.faces[0].dtype, 'elementConnVLType')
-    # connection_count = ds.createDimension('connectionCount', length_connection_count)
+    # coll.add_variable(Variable('nodeCoords', value=nodes, dtype=float_dtype,
+    #                            dimensions=['nodeCount', 'coordDim'], units='degrees'))
     #
-    # # Variables ########################################################################################################
-    #
-    # node_coords = ds.createVariable('nodeCoords', nodes.dtype, (node_count.name, coord_dim.name))
-    # node_coords.units = 'degrees'
-    # node_coords[:] = nodes
-    #
-    # element_conn = ds.createVariable('elementConn', element_conn_data.dtype, (connection_count.name,))
-    # element_conn.long_name = 'Node indices that define the element connectivity.'
+    # elementConn = Variable('elementConn', value=element_conn_data, dimensions='connectionCount',
+    #                        attrs={'long_name': 'Node indices that define the element connectivity.',
+    #                               'start_index': start_index})
     # if polygon_break_value is not None:
-    #     element_conn.polygon_break_value = polygon_break_value
-    # element_conn.start_index = start_index
-    # element_conn[:] = element_conn_data
+    #     elementConn.attrs['polygon_break_value'] = polygon_break_value
+    # coll.add_variable(elementConn)
     #
-    # num_element_conn = ds.createVariable('numElementConn', np.int32, (element_count.name,))
-    # num_element_conn.long_name = 'Number of nodes per element.'
-    # num_element_conn[:] = num_element_conn_data
+    # coll.add_variable(Variable('numElementConn', value=num_element_conn_data, dimensions='elementCount',
+    #                            dtype=int_dtype, attrs={'long_name': 'Number of nodes per element.'}))
     #
-    # center_coords = ds.createVariable('centerCoords', face_coordinates.dtype, (element_count.name, coord_dim.name))
-    # center_coords.units = 'degrees'
-    # center_coords[:] = face_coordinates
+    # coll.add_variable(Variable('centerCoords', value=face_coordinates, dimensions=['elementCount', 'coordDim'],
+    #                            units='degrees', dtype=float_dtype))
     #
-    # if face_uid_value is not None:
-    #     uid = ds.createVariable(face_uid_name, face_uid_value.dtype, dimensions=(element_count.name,))
-    #     uid[:] = face_uid_value
-    #     uid.long_name = 'Element unique identifier.'
+    # if face_uid_name is not None:
+    #     coll.add_variable(Variable(face_uid_name, value=face_uid_value, dimensions='elementCount',
+    #                                attrs={'long_name': 'Element unique identifier.'}))
     #
-    # element_area = ds.createVariable('elementArea', nodes.dtype, (element_count.name,))
-    # element_area[:] = face_areas
-    # element_area.units = 'degrees'
-    # element_area.long_name = 'Element area in native units.'
+    # coll.add_variable(Variable('elementArea', value=face_areas, dimensions='elementCount',
+    #                            attrs={'units': 'degrees', 'long_name': 'Element area in native units.'},
+    #                            dtype=float_dtype))
     #
-    # # tdk: element mask required?
-    # # element_mask = ds.createVariable('elementMask', np.int32, (element_count.name,))
+    # coll.attrs['gridType'] = 'unstructured'
+    # coll.attrs['version'] = '0.9'
+    # coll.attrs['coordDim'] = 'longitude latitude'
     #
-    # # Global Attributes ################################################################################################
-    #
-    # ds.gridType = 'unstructured'
-    # ds.version = '0.9'
-    # setattr(ds, coord_dim.name, "longitude latitude")
+    # coll.write(ds)
+
+    # Dimensions #######################################################################################################
+
+    node_count = ds.createDimension('nodeCount', nodes.shape[0])
+    element_count = ds.createDimension('elementCount', faces.shape[0])
+    coord_dim = ds.createDimension('coordDim', 2)
+    # element_conn_vltype = ds.createVLType(fm.faces[0].dtype, 'elementConnVLType')
+    connection_count = ds.createDimension('connectionCount', length_connection_count)
+
+    # Variables ########################################################################################################
+
+    node_coords = ds.createVariable('nodeCoords', nodes.dtype, (node_count.name, coord_dim.name))
+    node_coords.units = 'degrees'
+    node_coords[:] = nodes
+
+    element_conn = ds.createVariable('elementConn', element_conn_data.dtype, (connection_count.name,))
+    element_conn.long_name = 'Node indices that define the element connectivity.'
+    if polygon_break_value is not None:
+        element_conn.polygon_break_value = polygon_break_value
+    element_conn.start_index = start_index
+    element_conn[:] = element_conn_data
+
+    num_element_conn = ds.createVariable('numElementConn', np.int32, (element_count.name,))
+    num_element_conn.long_name = 'Number of nodes per element.'
+    num_element_conn[:] = num_element_conn_data
+
+    center_coords = ds.createVariable('centerCoords', face_coordinates.dtype, (element_count.name, coord_dim.name))
+    center_coords.units = 'degrees'
+    center_coords[:] = face_coordinates
+
+    if face_uid_value is not None:
+        uid = ds.createVariable(face_uid_name, face_uid_value.dtype, dimensions=(element_count.name,))
+        uid[:] = face_uid_value
+        uid.long_name = 'Element unique identifier.'
+
+    element_area = ds.createVariable('elementArea', nodes.dtype, (element_count.name,))
+    element_area[:] = face_areas
+    element_area.units = 'degrees'
+    element_area.long_name = 'Element area in native units.'
+
+    # element_mask = ds.createVariable('elementMask', np.int32, (element_count.name,))
+
+    # Global Attributes ################################################################################################
+
+    ds.gridType = 'unstructured'
+    ds.version = '0.9'
+    setattr(ds, coord_dim.name, "longitude latitude")
 
 
 def get_split_polygon_by_node_threshold(geom, node_threshold):
@@ -652,19 +653,230 @@ def get_node_count(geom):
     return node_count
 
 
-def get_split_polygons(geom, split_shape):
-    from ocgis.new_interface.variable import Variable
-    from ocgis.new_interface.grid import GridXY
+def get_bounds_from_1d(centroids):
+    """
+    :param centroids: Vector representing center coordinates from which to interpolate bounds.
+    :type centroids: :class:`numpy.ndarray`
+    :returns: A *n*-by-2 array with *n* equal to the shape of ``centroids``.
 
+    >>> import numpy as np
+    >>> centroids = np.array([1,2,3])
+    >>> get_bounds_from_1d(centroids)
+    np.array([[0, 1],[1, 2],[2, 3]])
+
+    :rtype: :class:`numpy.ndarray`
+    :raises: NotImplementedError, ValueError
+    """
+
+    mids = get_bounds_vector_from_centroids(centroids)
+
+    # loop to fill the bounds array
+    bounds = np.zeros((centroids.shape[0], 2), dtype=centroids.dtype)
+    for ii in range(mids.shape[0]):
+        try:
+            bounds[ii, 0] = mids[ii]
+            bounds[ii, 1] = mids[ii + 1]
+        except IndexError:
+            break
+
+    return bounds
+
+
+def get_split_polygons(geom, split_shape):
     minx, miny, maxx, maxy = geom.bounds
     rows = np.linspace(miny, maxy, split_shape[0])
     cols = np.linspace(minx, maxx, split_shape[1])
 
-    row = Variable(value=rows, name='row', dimensions='row')
-    col = Variable(value=cols, name='col', dimensions='col')
-    grid = GridXY(col, row)
-    grid.set_extrapolated_bounds('x', 'y', 'corners')
-    return grid.polygon.value.flatten().tolist()
+    cols, rows = np.meshgrid(cols, rows)
+
+    cols_corners = get_extrapolated_corners_esmf(cols)
+    cols_corners = get_ocgis_corners_from_esmf_corners(cols_corners)
+
+    rows_corners = get_extrapolated_corners_esmf(rows)
+    rows_corners = get_ocgis_corners_from_esmf_corners(rows_corners)
+
+    corners = np.vstack((rows_corners, cols_corners))
+    corners = corners.reshape([2] + list(cols_corners.shape))
+    range_row = range(rows.shape[0])
+    range_col = range(cols.shape[1])
+
+    fill = np.zeros(cols.shape, dtype=object)
+
+    for row, col in itertools.product(range_row, range_col):
+        current_corner = corners[:, row, col]
+        coords = np.hstack((current_corner[1, :].reshape(-1, 1),
+                            current_corner[0, :].reshape(-1, 1)))
+        polygon = Polygon(coords)
+        fill[row, col] = polygon
+
+    return fill.flatten().tolist()
+
+
+def get_ocgis_corners_from_esmf_corners(ecorners):
+    """
+    :param ecorners: An array of ESMF corners.
+    :type ecorners: :class:`numpy.ndarray`
+    :returns: A masked array of OCGIS corners.
+    :rtype: :class:`~numpy.ma.core.MaskedArray`
+    """
+
+    assert ecorners.ndim == 2
+
+    # ESMF corners have an extra row and column.
+    base_shape = [xx - 1 for xx in ecorners.shape]
+    grid_corners = np.zeros(base_shape + [4], dtype=ecorners.dtype)
+    # Uppler left, upper right, lower right, lower left
+    slices = [(0, 0), (0, 1), (1, 1), (1, 0)]
+    for ii, jj in itertools.product(range(base_shape[0]), range(base_shape[1])):
+        row_slice = slice(ii, ii + 2)
+        col_slice = slice(jj, jj + 2)
+        corners = ecorners[row_slice, col_slice]
+        for kk, slc in enumerate(slices):
+            grid_corners[ii, jj, kk] = corners[slc]
+    grid_corners = np.ma.array(grid_corners, mask=False)
+    return grid_corners
+
+
+def get_extrapolated_corners_esmf(arr):
+    """
+    :param arr: Array of centroids.
+    :type arr: :class:`numpy.ndarray`
+    :returns: A two-dimensional array of extrapolated corners with dimension ``(arr.shape[0]+1, arr.shape[1]+1)``.
+    :rtype: :class:`numpy.ndarray`
+    """
+
+    assert not isinstance(arr, MaskedArray)
+
+    # if this is only a single element, we cannot make corners
+    if all([element == 1 for element in arr.shape]):
+        msg = 'At least two elements required to extrapolate corners.'
+        raise ValueError(msg)
+
+    # if one of the dimensions has only a single element, the fill approach is different
+    if any([element == 1 for element in arr.shape]):
+        ret = get_extrapolated_corners_esmf_vector(arr.reshape(-1))
+        if arr.shape[1] == 1:
+            ret = ret.swapaxes(0, 1)
+        return ret
+
+    # the corners array has one additional row and column
+    corners = np.zeros((arr.shape[0] + 1, arr.shape[1] + 1), dtype=arr.dtype)
+
+    # fill the interior of the array first with a 2x2 moving window. then do edges.
+    for ii in range(arr.shape[0] - 1):
+        for jj in range(arr.shape[1] - 1):
+            window_values = arr[ii:ii + 2, jj:jj + 2]
+            corners[ii + 1, jj + 1] = np.mean(window_values)
+
+    # flag to determine if rows are increasing in value
+    row_increasing = get_is_increasing(arr[:, 0])
+    # flag to determine if columns are increasing in value
+    col_increasing = get_is_increasing(arr[0, :])
+
+    # the absolute difference of row and column elements
+    row_diff = np.mean(np.abs(np.diff(arr[:, 0])))
+    col_diff = np.mean(np.abs(np.diff(arr[0, :])))
+
+    # fill the rows accounting for increasing flag
+    for ii in range(1, corners.shape[0] - 1):
+        if col_increasing:
+            corners[ii, 0] = corners[ii, 1] - col_diff
+            corners[ii, -1] = corners[ii, -2] + col_diff
+        else:
+            corners[ii, 0] = corners[ii, 1] + col_diff
+            corners[ii, -1] = corners[ii, -2] - col_diff
+
+    # fill the columns accounting for increasing flag
+    for jj in range(1, corners.shape[1] - 1):
+        if row_increasing:
+            corners[0, jj] = corners[1, jj] - row_diff
+            corners[-1, jj] = corners[-2, jj] + row_diff
+        else:
+            corners[0, jj] = corners[1, jj] + row_diff
+            corners[-1, jj] = corners[-2, jj] - row_diff
+
+    # fill the extreme corners accounting for increasing flag
+    for row_idx in [0, -1]:
+        if col_increasing:
+            corners[row_idx, 0] = corners[row_idx, 1] - col_diff
+            corners[row_idx, -1] = corners[row_idx, -2] + col_diff
+        else:
+            corners[row_idx, 0] = corners[row_idx, 1] + col_diff
+            corners[row_idx, -1] = corners[row_idx, -2] - col_diff
+
+    return corners
+
+
+def get_extrapolated_corners_esmf_vector(vec):
+    """
+    :param vec: A vector.
+    :type vec: :class:`numpy.ndarray`
+    :returns: A two-dimensional corners array with dimension ``(2, vec.shape[0]+1)``.
+    :rtype: :class:`numpy.ndarray`
+    :raises: ShapeError
+    """
+
+    if len(vec.shape) > 1:
+        msg = 'A vector is required.'
+        raise ValueError(msg)
+
+    corners = np.zeros((2, vec.shape[0] + 1), dtype=vec.dtype)
+    corners[:] = get_bounds_vector_from_centroids(vec)
+
+    return corners
+
+
+def get_bounds_vector_from_centroids(centroids):
+    """
+    :param centroids: Vector representing center coordinates from which to interpolate bounds.
+    :type centroids: :class:`numpy.ndarray`
+    :returns: Vector representing upper and lower bounds for centroids with edges extrapolated.
+    :rtype: :class:`numpy.ndarray` with shape ``centroids.shape[0]+1``
+    :raises: NotImplementedError, ValueError
+    """
+
+    if len(centroids) < 2:
+        raise ValueError('Centroid arrays must have length >= 2.')
+
+    # will hold the mean midpoints between coordinate elements
+    mids = np.zeros(centroids.shape[0] - 1, dtype=centroids.dtype)
+    # this is essentially a two-element span moving average kernel
+    for ii in range(mids.shape[0]):
+        mids[ii] = np.mean(centroids[ii:ii + 2])
+    # account for edge effects by averaging the difference of the midpoints. if there is only a single value, use the
+    # different of the original values instead.
+    if len(mids) == 1:
+        diff = np.diff(centroids)
+    else:
+        diff = np.mean(np.diff(mids))
+    # appends for the edges shifting the nearest coordinate by the mean difference
+    mids = np.append([mids[0] - diff], mids)
+    mids = np.append(mids, [mids[-1] + diff])
+
+    return mids
+
+
+def get_is_increasing(vec):
+    """
+    :param vec: A vector array.
+    :type vec: :class:`numpy.ndarray`
+    :returns: ``True`` if the array is increasing from index 0 to -1. ``False`` otherwise.
+    :rtype: bool
+    :raises: SingleElementError, ShapeError
+    """
+
+    if vec.shape == (1,):
+        raise ValueError('Increasing can only be determined with a minimum of two elements.')
+    if len(vec.shape) > 1:
+        msg = 'Only vectors allowed.'
+        raise ValueError(msg)
+
+    if vec[0] < vec[-1]:
+        ret = True
+    else:
+        ret = False
+
+    return ret
 
 
 def get_iter(element, dtype=None):
@@ -690,3 +902,29 @@ def get_iter(element, dtype=None):
             it = iter([element])
 
     return it
+
+
+def get_exact_field(lon, lat, to_radians=True, unwrap=True):
+    """
+    :param lon_rad: Array of longitude coordinates.
+    :param lat_rad: Array of latitude coordinates.
+    :param to_radians: If ``True``, convert spherical degrees to radians.
+    :param unwrap: If ``True``, unwrap spherical data to the 0 to 360 degree domain.
+    :return: An array of exact values calculated from radian coordinates.
+
+    >>> lon_rad = np.array([-170., -10., 0., 10., 170.])
+    >>> lat_rad = np.array([-40., -10., 0., 10., 40.])
+    >>> exact = get_exact_field(lon, lat)
+    >>> desired = [3.204474688087701, 3.112123092720088, 4.0, 3.112123092720088, 3.204474688087701]
+    >>> assert np.all(np.isclose(exact, desired))
+    """
+
+    new_lon_rad = lon.copy()
+    new_lat_rad = lat.copy()
+    if unwrap:
+        new_lon_rad[new_lon_rad < 0.] += 360.
+    if to_radians:
+        new_lon_rad *= 0.0174533
+        new_lat_rad *= 0.0174533
+    exact = 2. + np.cos(new_lat_rad) ** 2. + np.cos(2. * new_lon_rad)
+    return exact

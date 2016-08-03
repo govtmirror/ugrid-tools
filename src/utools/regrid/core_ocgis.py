@@ -7,8 +7,6 @@ import fiona
 import numpy as np
 from addict import Dict
 from logbook import INFO
-from ocgis import RequestDataset
-from ocgis.new_interface.variable import VariableCollection, Variable
 
 from utools.helpers import nc_scope
 from utools.io.mpi import MPI_RANK, MPI_COMM, create_sections
@@ -38,6 +36,8 @@ def create_merged_weights(weight_files, esmf_unstructured, master_weights):
         order as ``weight_files``. The indexed weight file must have been created from the indexed ESMF unstructured.)
     :param master_weights: file path to the merged, master weights file
     """
+    from ocgis import RequestDataset
+    from ocgis.new_interface.variable import Variable, VariableCollection
 
     master_map = {}
     current_global_index = 1

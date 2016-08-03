@@ -39,42 +39,23 @@ def from_shapefile(path, name_uid, mesh_name='mesh', path_rtree=None, use_ragged
 
 def get_flexible_mesh(gm, mesh_name, use_ragged_arrays, with_connectivity=True):
     from helpers import get_variables
-    from ocgis.new_interface.variable import Variable, VariableCollection
 
     result = get_variables(gm, use_ragged_arrays=use_ragged_arrays, with_connectivity=with_connectivity)
     if MPI_RANK == 0:
-        coll = VariableCollection()
+        ret = {}
 
         face_nodes, face_edges, edge_nodes, nodes, face_links, face_ids, face_coordinates, face_areas = result
-        face_nodes = Variable('face', value=face_nodes, dimensions='element_count')
-        face_edges = Variable('face_edges', value=face_edges, dimensions='element_count')
-        edge_nodes = Variable('edge_nodes', value=edge_nodes, dimensions=['node_count', 'coord_dim'])
-        nodes = Variable('nodes', value=nodes, dimensions=['node_count', 'coord_dim'])
+        ret['face'] = face_nodes
+        ret['face_edges'] = face_edges
+        ret['edge_nodes'] = edge_nodes
+        ret['nodes'] = nodes
+        ret['face_coordinates'] = face_coordinates
+        ret['face_areas'] = face_areas
+        ret[gm.name_uid] = face_ids
         if face_links is not None:
-            face_links = Variable('face_links', value=face_links, dimensions=['element_count'])
-        face_coordinates = Variable('face_coordinates', value=face_coordinates,
-                                    dimensions=['element_count', 'coord_dim'])
-        face_areas = Variable('face_areas', value=face_areas, dimensions=['element_count'])
-        face_uid = Variable(gm.name_uid, value=face_ids, dimensions='element_count')
+            ret['face_links'] = face_links
 
-        coll.add_variable(face_nodes)
-        coll.add_variable(face_edges)
-        coll.add_variable(edge_nodes)
-        coll.add_variable(nodes)
-        coll.add_variable(face_coordinates)
-        coll.add_variable(face_areas)
-        if face_links is not None:
-            coll.add_variable(face_links)
-        coll.add_variable(face_uid)
-
-        # data_attrs = {'long_name': 'Face unique identifiers.'}
-        # data = {'': UVar(gm.name_uid, location='face', data=face_ids, attributes=data_attrs)}
-        # ret = FlexibleMesh(nodes=nodes, faces=face_nodes, edges=edge_nodes, boundaries=None,
-        #                    face_face_connectivity=face_links, face_edge_connectivity=face_edges,
-        #                    edge_coordinates=None, face_coordinates=face_coordinates, boundary_coordinates=None,
-        #                    data=data, mesh_name=mesh_name, face_areas=face_areas)
-
-        ret = coll
+        ret = ret
     else:
         ret = None
     return ret

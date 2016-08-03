@@ -52,9 +52,7 @@ class Test(AbstractUToolsTest):
     def test_weighted_output(self):
         path_in_shp = os.path.join(self.path_bin, 'nhd_catchments_texas', 'nhd_catchments_texas.shp')
         name_uid = 'GRIDCODE'
-        # esmf_exe_path = '/home/benkoziol/anaconda2/envs/pmesh/bin/ESMF_RegridWeightGen'
         esmf_exe_path = 'ESMF_RegridWeightGen'
-        # mpirun_exe_path = '/home/benkoziol/anaconda2/envs/pmesh/bin/mpirun'
         mpirun_exe_path = 'mpirun'
         variable_name = 'exact'
 
@@ -67,11 +65,9 @@ class Test(AbstractUToolsTest):
         # Test root mean squared error.
         row = np.arange(32.0012, 32.4288 + 0.01, 0.01)
         col = np.arange(-95.0477, -94.7965 + 0.01, 0.01)
+        ttime = np.array([100, 200, 300], dtype=np.float32)
 
-        create_source_netcdf_data(path_src, row=row, col=col, exact=True, variable_name=variable_name)
-        # OcgOperations(dataset={'uri': path_src}, snippet=True, output_format='shp', prefix='exact',
-        #               dir_output=self.path_current_tmp).execute()
-
+        create_source_netcdf_data(path_src, col, row, ttime, variable_name=variable_name)
         convert_to_esmf_format(path_in_esmf_format, path_in_shp, name_uid)
         create_weights_file(mpirun_exe_path, esmf_exe_path, path_src, path_in_esmf_format, path_out_weights_nc, n=1)
         created_weighted_output(path_in_esmf_format, path_src, path_out_weights_nc, path_output_data, variable_name)
@@ -83,8 +79,6 @@ class Test(AbstractUToolsTest):
         with self.nc_scope(path_output_data) as ds:
             exact = ds.variables[variable_name][0, :]
             coords = ds.variables['centerCoords'][:]
-        coords[:, 0] += 360.
-        coords *= 0.0174533
         exact_centers = get_exact_field(coords[:, 1], coords[:, 0])
         se = (exact - exact_centers) ** 2
         mse = np.mean(se)
