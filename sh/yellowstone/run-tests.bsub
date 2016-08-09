@@ -2,22 +2,49 @@
 
 
 #BSUB -P P35071400                                       # project code
-#BSUB -W 00:06                                           # wall-clock time (hrs:mins)
+#BSUB -W 00:01                                           # wall-clock time (hrs:mins)
 #BSUB -n 8                                               # number of tasks in job
 #BSUB -R "span[ptile=8]"                                 # run ptile=<> MPI tasks per node
-#BSUB -J utools                                           # job name
-#BSUB -o /glade/u/home/benkoz/sandbox/utools.test.out     # output file name
-#BSUB -e /glade/u/home/benkoz/sandbox/utools.test.err     # error file name
+#BSUB -J utools                                          # job name
+#BSUB -o /glade/u/home/benkoz/logs/utools.test.%J.out    # output file name
+#BSUB -e /glade/u/home/benkoz/logs/utools.test.%J.err    # error file name
 #BSUB -q geyser                                          # queue
 
-export PATH=/glade/u/home/benkoz/miniconda2/envs/utools/bin:${PATH}
-SRC=/glade/u/home/benkoz/src/utools/src
+source /glade/u/home/benkoz/src/ugrid-tools/sh/yellowstone/utools-env.sh
 
-echo '+++ Serial tests +++'
-nosetests -q -a '!mpi_only' ${SRC} && \
-echo '' && \
+export TESTBIN=/glade/u/home/benkoz/src/ugrid-tools/src/utools/test/bin
+export SOURCE_SHP=${TESTBIN}/nhd_catchments_texas/nhd_catchments_texas.shp
+export UTOOLS_LOGGING_LEVEL=error
+export ESMF_RegridWeightGen_EXE=/glade/u/home/benkoz/sandbox/esmf_HEAD/bin/ESMF_RegridWeightGen
 
-echo '+++ MPI tests ++++++' && \
-mpirun.lsf nosetests -q -a 'mpi' ${SRC} && \
+# Basic environment tests. ---------------------------------------------------------------------------------------------
 
-echo 'test.sh success'
+## Test python library import as expected.
+#mpirun.lsf python /glade/u/home/benkoz/src/ugrid-tools/sh/yellowstone/test_python_library_imports.py
+#
+## Test basic Fiona operation.
+#mpirun.lsf python /glade/u/home/benkoz/src/ugrid-tools/sh/yellowstone/test_fiona_operation.py
+#
+## Test command line help interface is visible.
+#mpirun.lsf utools_cli --help
+
+# Run actual data tests. -----------------------------------------------------------------------------------------------
+
+echo '+++ CLI tests ++++++' && \
+
+TESTTMPDIR=`mktemp -d`
+
+SOURCE_FIELD=${TESTBIN}/precipitation_synthetic-20160310-1909.nc
+SOURCE_SHP_UID=GRIDCODE
+ESMF_FORMAT_FILE=${TESTTMPDIR}/test_esmf_format.nc
+WEIGHTS=${TESTTMPDIR}/test_weights.nc
+OUTPUT=${TESTTMPDIR}/test_weighted_output.nc
+CLI='utools_cli'
+
+mpirun.lsf ${CLI} convert -u ${SOURCE_SHP_UID} -s ${SOURCE_SHP} -e ${ESMF_FORMAT_FILE} && \
+mpirun.lsf ${ESMF_RegridWeightGen_EXE} -s ${SOURCE_FIELD} -d ${ESMF_FORMAT_FILE} -w ${WEIGHTS} -m conserve \
+    --src_type GRIDSPEC --dst_type ESMF --src_regional && \
+
+echo 'CLI tests complete. No errors.'
+rm -r ${TESTTMPDIR}
+exit 0

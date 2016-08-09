@@ -10,11 +10,11 @@ DEFAULT_NODE_THRESHOLD = 10000
 
 
 @click.group()
-def fmtools_cli():
+def utools_cli():
     pass
 
 
-@fmtools_cli.command(help='Create ESMF unstructured NetCDF files from polygon ESRI Shapefiles.')
+@utools_cli.command(help='Create ESMF unstructured NetCDF files from polygon ESRI Shapefiles.')
 @click.option('-u', '--source_uid', required=True, help='Name of unique identifier in source shapefile.')
 @click.option('-s', '--source', type=click.Path(exists=True), required=True,
               help='Path to input shapefile.')
@@ -31,7 +31,7 @@ def convert(source_uid, source, esmf_format, node_threshold):
     log_entry('info', 'Finished converting shapefile to ESMF format: {}'.format(source), rank=0)
 
 
-@fmtools_cli.command(help='Create a merged ESMF weights file.')
+@utools_cli.command(help='Create a merged ESMF weights file.')
 @click.option('-c', '--catchment-directory', required=True,
               help='Path to the directory containing the ESMF unstructured files.')
 @click.option('-w', '--weight-directory', type=click.Path(exists=True), required=True,
@@ -58,7 +58,7 @@ def merge(catchment_directory, weight_directory, master_path):
     log_entry('info', 'Finished merging netCDF files', rank=0)
 
 
-@fmtools_cli.command(help='Apply weights to a source variable.')
+@utools_cli.command(help='Apply weights to a source variable.')
 @click.option('-s', '--source', type=click.Path(exists=True), required=True,
               help='Path to source NetCDF file containing field values.')
 @click.option('-n', '--name', type=str, required=True,
@@ -78,4 +78,4 @@ def apply(source, name, weights, esmf_format, output):
 
 
 if __name__ == '__main__':
-    fmtools_cli()
+    utools_cli()
