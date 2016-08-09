@@ -7,6 +7,31 @@ from fiona.crs import from_epsg
 from shapely.geometry import mapping
 
 
+def get_iter(element, dtype=None):
+    """
+    :param element: The element comprising the base iterator. If the element is a ``basestring`` or :class:`numpy.ndarray`
+     then the iterator will return the element and stop iteration.
+    :type element: varying
+    :param dtype: If not ``None``, use this argument as the argument to ``isinstance``. If ``element`` is an instance of
+     ``dtype``, ``element`` will be placed in a list and passed to ``iter``.
+    :type dtype: type or tuple
+    """
+
+    if dtype is not None:
+        if isinstance(element, dtype):
+            element = (element,)
+
+    if isinstance(element, basestring):
+        it = iter([element])
+    else:
+        try:
+            it = iter(element)
+        except TypeError:
+            it = iter([element])
+
+    return it
+
+
 @contextmanager
 def nc_scope(path, mode='r', format=None):
     """

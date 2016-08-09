@@ -46,7 +46,7 @@ setup(
     package_dir={'': 'src'},
     package_data=package_data,
     cmdclass={'uninstall': UninstallCommand},
-    install_requires=['mpi4py', 'ESMPy', 'click', 'netCDF4', 'shapely', 'fiona'],
+    install_requires=['mpi4py', 'ESMPy', 'netCDF4', 'shapely', 'fiona'],
     tests_require=['nose'],
     scripts=['src/utools_cli'],
 )

@@ -12,7 +12,6 @@ from shapely.geometry.polygon import orient
 
 from geom_cabinet import GeomCabinetIterator
 from mpi import MPI_RANK, create_sections, MPI_COMM, hgather, vgather, MPI_SIZE, dgather
-from spatial_index import SpatialIndex
 from utools.addict import Dict
 from utools.constants import UgridToolsConstants
 
@@ -357,6 +356,7 @@ def create_rtree_file(gm, path):
     :type gm: :class:`pyugrid.flexible_mesh.helpers.GeometryManager`
     :param path: Output path for the serialized spatial index. See http://toblerity.org/rtree/tutorial.html#serializing-your-index-to-a-file.
     """
+    from spatial_index import SpatialIndex
 
     si = SpatialIndex(path=path)
     for uid, record in gm.iter_records(return_uid=True):
@@ -390,6 +390,8 @@ class GeometryManager(object):
         return ret
 
     def get_spatial_index(self):
+        from spatial_index import SpatialIndex
+
         si = SpatialIndex(path=self.path_rtree)
         # Only add new records to the index if we are working in-memory.
         if self.path_rtree is None:

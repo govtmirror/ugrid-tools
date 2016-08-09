@@ -21,9 +21,10 @@ install:
   - pip install logbook
   - git clone -b pmesh-ugrid-nfie https://github.com/NCPP/ocgis.git && cd ocgis && python setup.py install
   - cd ..
-  - conda create -n test-without-ocgis -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis nose
-  - source activate test-without-ocgis
-  - conda remove -y ocgis
+
+  - conda create -n test-without-ocgis-rtree -y -c nesii/channel/dev-esmf -c nesii esmpy==HEAD ocgis nose
+  - source activate test-without-ocgis-rtree
+  - conda remove -y ocgis rtree
   - pip install logbook
 
 script:
@@ -32,7 +33,8 @@ script:
   - python setup.py install
   - python -c "import utools"
   - utools_cli --help
-  - source activate test-without-ocgis
+
+  - source activate test-without-ocgis-rtree
   - bash test.sh
   - python setup.py install
   - python -c "import utools"

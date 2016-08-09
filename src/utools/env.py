@@ -4,6 +4,7 @@ from importlib import import_module
 import logbook
 
 from utools.constants import UgridToolsConstants
+from utools.helpers import get_iter
 
 
 class Environment(object):
