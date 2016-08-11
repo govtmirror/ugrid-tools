@@ -5,6 +5,7 @@ sudo: false
 branches:
   except:
     - yellowstone-env
+    - yellowstone-convert-to-esmf
 
 env:
   - CONDA_PYTHON="python=2.7"

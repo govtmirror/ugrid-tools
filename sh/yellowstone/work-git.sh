@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-cd ~/src/utools && \
+cd ~/src/ugrid-tools && \
  git fetch && \
- git checkout i20-polygon-splitting && \
+ git checkout yellowstone-convert-to-esmf && \
  git pull && \
 
-bash /glade/u/home/benkoz/src/utools/sh/yellowstone/work.sh
+bash /glade/u/home/benkoz/src/ugrid-tools/sh/yellowstone/work.sh

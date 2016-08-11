@@ -58,7 +58,7 @@ class Environment(object):
         :type value: int or str
         """
 
-        from ocgis.util.helpers import format_bool
+        from helpers import format_bool
 
         return format_bool(value)
 

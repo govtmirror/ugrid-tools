@@ -9,7 +9,8 @@
 
 #cd ${WD} && \
 
-UTOOLS_SH=/glade/u/home/benkoz/src/utools/sh/yellowstone/jobs/run.sh
+export UTOOLS_SRC=/glade/u/home/benkoz/src/ugrid-tools
+UTOOLS_SH=${UTOOLS_SRC}/sh/yellowstone/jobs/run.sh
 #UTOOLS_SH=/glade/u/home/benkoz/src/utools/sh/yellowstone/run-vpu.bsub
 #UTOOLS_SH=/glade/u/home/benkoz/src/utools/sh/yellowstone/run-vpu-texas.bsub
 

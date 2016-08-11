@@ -7,6 +7,27 @@ from fiona.crs import from_epsg
 from shapely.geometry import mapping
 
 
+def format_bool(value):
+    """
+    Format a string to boolean.
+
+    :param value: The value to convert.
+    :type value: int or str
+    """
+
+    try:
+        ret = bool(int(value))
+    except ValueError:
+        value = value.lower()
+        if value in ['t', 'true']:
+            ret = True
+        elif value in ['f', 'false']:
+            ret = False
+        else:
+            raise ValueError('String not recognized for boolean conversion: {0}'.format(value))
+    return ret
+
+
 def get_iter(element, dtype=None):
     """
     :param element: The element comprising the base iterator. If the element is a ``basestring`` or :class:`numpy.ndarray`
