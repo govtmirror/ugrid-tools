@@ -11,7 +11,7 @@ fi
 mkdir -p ${LOG_DIR}/jobs && \
 mkdir -p ${LOG_DIR}/esmf && \
 mkdir -p ${UTOOLS_LOGGING_DIR} && \
-mkdir -p ${SHAPEFILE_DESTINATION_DIR}
+mkdir -p ${ESMF_UGRID_DIR}
 
 idx=0
 for catchment_id in "${CATCHMENT_ID[@]}"
@@ -25,21 +25,21 @@ do
     export UTOOLS_LOGGING_FILE_PREFIX=${j}
     export SHAPEFILE_SOURCE=${CATCHMENT_SHP[idx]}
 #    export DESTINATION=${STORAGE}/catchment_esmf_format/node-thresholded-10000/esmf_format_${catchment_id}_node-threshold-10000.nc
-    export DESTINATION=${SHAPEFILE_DESTINATION_DIR}/esmf_format_${catchment_id}.nc
-    export WEIGHTS=${STORAGE}/scratch/weights_${catchment_id}.nc
-    export WEIGHTED_OUTPUT=${STORAGE}/scratch/output_weighted_${catchment_id}.nc
+    export DESTINATION=${ESMF_UGRID_DIR}/esmf_format_${catchment_id}.nc
+    export WEIGHTS=${STORAGE}/esmf_weights/esmf_weights_${catchment_id}.nc
+#    export WEIGHTED_OUTPUT=${STORAGE}/scratch/output_weighted_${catchment_id}.nc
 
     # Convert catchments shapefile to ESMF format.
-    bsub -W ${wall_time} -n ${N} -J ${j}-convert-to-esmf -o ${o} -e ${e} < ${JOB_DIR}/run-convert-to-esmf.bsub
+#    bsub -W ${wall_time} -n ${N} -J ${j}-convert-to-esmf -o ${o} -e ${e} < ${JOB_DIR}/run-convert-to-esmf.bsub
 
     # Assert the static files exist.
-#    if [ ! -f ${DESTINATION} ]; then
-#        echo "ESMF Unstructured format file not found."
-#        exit 1
-#    fi
+    if [ ! -f ${DESTINATION} ]; then
+        echo "ESMF Unstructured format file not found."
+        exit 1
+    fi
 
     # Generate weights.
-#    bsub -W ${wall_time} -n ${n} -J ${j}-weight-gen -o ${o} -e ${e} < ${JOB_DIR}/run-weight-gen.bsub
+    bsub -W ${wall_time} -n ${n} -J ${j}-weight-gen -o ${o} -e ${e} < ${JOB_DIR}/run-weight-gen.bsub
 #    bsub -w "done(${J}-convert-to-esmf)" -W ${W} -n ${N} -J ${J}-weight-gen < ${JOB_DIR}/run-weight-gen.bsub
 
     # Apply weights and create weighted output.

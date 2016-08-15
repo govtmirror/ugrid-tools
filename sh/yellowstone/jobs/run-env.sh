@@ -52,9 +52,17 @@ ${CATCHMENT_SHP_DIR}/03N-SouthAtlanticNorth/NHDPlusSA/NHDPlus03N/NHDPlusCatchmen
 #CATCHMENT_ID=( 03W-SouthAtlanticWest 10L-LowerMissouri 11-ArkRedWhite 02-MidAtlantic 04-GreatLakes 05-Ohio 10U-UpperMissouri 01-Northeast 08-LowerMississippi 12-Texas 03N-SouthAtlanticNorth 06-Tennessee 14-UpperColorado 18-California 03S-SouthAtlanticSouth 15-LowerColorado 16-GreatBasin 07-UpperMississippi 09-SourisRedRainy 13-RioGrande 17-PacificNorthwest )
 #CATCHMENT_ID=( 14-UpperColorado )
 #CATCHMENT_SHP=( /glade/u/home/benkoz/storage/catchment_shapefiles/14-UpperColorado/NHDPlusCO/NHDPlus14/NHDPlusCatchment/Catchment.shp )
-W=( 00:05 00:15 00:05 00:05 00:05 00:05 00:05 00:15 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 )
+
+# Wall times for ESMF unstructured file generation.
+#W=( 00:05 00:15 00:05 00:05 00:05 00:05 00:05 00:15 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 00:05 )
+
+# Wall times for weight file generation.
+#W=( 00:15 )
+W=( 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 00:15 )
+
 #W=( 00:30  )
-N=10
+#N=10
+N=128
 STORAGE=/glade/p/work/benkoz/storage
 
 #export PYTHONPATH=${PYTHONPATH}:/glade/u/home/benkoz/src/click/build/lib:/glade/u/home/benkoz/src/logbook/build/lib:/glade/u/home/benkoz/src/addict/build/lib
@@ -73,8 +81,9 @@ export UTOOLS_ENV=${UTOOLS_SRCDIR}/sh/yellowstone/utools-env.sh
 export JOB_DIR=${UTOOLS_SRCDIR}/sh/yellowstone/jobs
 export NODE_THRESHOLD=5000
 export SHAPEFILE_UID=GRIDCODE
-export SHAPEFILE_DESTINATION_DIR=${STORAGE}/esmf_unstructured/node-threshold-${NODE_THRESHOLD}
-export SOURCE=${STORAGE}/exact_data/exact-conus-025degree_20160316-1737.nc
+export ESMF_UGRID_DIR=${STORAGE}/esmf_unstructured/node-threshold-${NODE_THRESHOLD}
+export SOURCE=${STORAGE}/exact_data/high_resolution_ucar_exact_data_20160811.nc
+#export SOURCE=${STORAGE}/exact_data/exact-conus-025degree_20160316-1737.nc
 export VARIABLE_NAME=pr
 o="${LOG_DIR}/jobs/utools.%J.out"
 e="${LOG_DIR}/jobs/utools.%J.err"

@@ -3,7 +3,7 @@
 
 #BSUB -P P35071400
 #BSUB -R "span[ptile=16]"
-#BSUB -q economy
+#BSUB -q regular
 #BSUB -B
 
 

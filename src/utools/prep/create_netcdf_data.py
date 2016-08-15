@@ -4,6 +4,14 @@ import numpy as np
 from utools.io.helpers import get_bounds_from_1d, get_exact_field
 
 
+def create_high_resolution_ucar_grid():
+    path = '/tmp/high_resolution_uccar_exact_data_20160811.nc'
+    lon = np.linspace(-133.50735, -60.492672, num=4608)
+    lat = np.linspace(20.077797, 57.772186, num=3840)
+    ttime = [10.]
+    create_source_netcdf_data(path, lon, lat, ttime)
+
+
 def create_source_netcdf_data(path, lon, lat, ttime, variable_name='exact'):
     ds = nc.Dataset(path, 'w', format='NETCDF3_CLASSIC')
     try:
@@ -43,9 +51,13 @@ def create_source_netcdf_data(path, lon, lat, ttime, variable_name='exact'):
 
         mlon, mlat = np.meshgrid(lon, lat)
         exact = get_exact_field(mlat, mlon)
-        fill_exact = np.zeros((3, lat.shape[0], lon.shape[0]), dtype=np.float32)
+        fill_exact = np.zeros((len(ttime), lat.shape[0], lon.shape[0]), dtype=np.float32)
         fill_exact[:] = exact
         vexact = ds.createVariable(variable_name, np.float32, dimensions=('time', 'lat', 'lon'))
         vexact[:] = fill_exact
     finally:
         ds.close()
+
+
+if __name__ == '__main__':
+    create_high_resolution_ucar_grid()
