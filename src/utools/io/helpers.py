@@ -1,7 +1,5 @@
 import itertools
-import os
 from collections import deque, OrderedDict
-from copy import copy
 
 import fiona
 import numpy as np
@@ -10,7 +8,6 @@ from shapely.geometry import shape, mapping, Polygon, MultiPolygon
 from shapely.geometry.base import BaseMultipartGeometry
 from shapely.geometry.polygon import orient
 
-from geom_cabinet import GeomCabinetIterator
 from mpi import MPI_RANK, create_sections, MPI_COMM, hgather, vgather, MPI_SIZE, dgather
 from utools.addict import Dict
 from utools.constants import UgridToolsConstants
@@ -197,7 +194,7 @@ def get_face_variables(gm, with_connectivity=True):
     cdict = OrderedDict()
     n_coords = 0
 
-    for ctr, (uid_source, record_source) in enumerate(gm.iter_records(return_uid=True, slice=section)):
+    for ctr, (uid_source, record_source) in enumerate(gm.iter_records(return_uid=True, slc=section)):
         coordinates_list, n_coords = get_coordinates_list_and_update_n_coords(record_source, n_coords)
         cdict[uid_source] = coordinates_list
 
@@ -361,81 +358,6 @@ def create_rtree_file(gm, path):
     si = SpatialIndex(path=path)
     for uid, record in gm.iter_records(return_uid=True):
         si.add(uid, record['geom'])
-
-
-class GeometryManager(object):
-    """
-    Provides iteration, validation, and other management routines for collecting vector geometries from record lists or
-    flat files.
-    """
-
-    def __init__(self, name_uid, path=None, records=None, path_rtree=None, allow_multipart=False, node_threshold=None):
-        if path_rtree is not None:
-            assert os.path.exists(path_rtree + '.idx')
-
-        self.path = path
-        self.path_rtree = path_rtree
-        self.name_uid = name_uid
-        self.records = copy(records)
-        self.allow_multipart = allow_multipart
-        self.node_threshold = node_threshold
-
-        self._has_provided_records = False if records is None else True
-
-    def __len__(self):
-        if self.records is None:
-            ret = len(GeomCabinetIterator(path=self.path))
-        else:
-            ret = len(self.records)
-        return ret
-
-    def get_spatial_index(self):
-        from spatial_index import SpatialIndex
-
-        si = SpatialIndex(path=self.path_rtree)
-        # Only add new records to the index if we are working in-memory.
-        if self.path_rtree is None:
-            for uid, record in self.iter_records(return_uid=True):
-                si.add(uid, record['geom'])
-        return si
-
-    def iter_records(self, return_uid=False, select_uid=None, slice=None):
-        # Use records attached to the object or load records from source data.
-        to_iter = self.records or self._get_records_(select_uid=select_uid, slice=slice)
-
-        if self.records is not None and slice is not None:
-            to_iter = to_iter[slice[0]:slice[1]]
-
-        for ctr, record in enumerate(to_iter):
-            if self._has_provided_records and 'geom' not in record:
-                record['geom'] = shape(record['geometry'])
-                # Only use the geometry objects from here. Maintaining the list of coordinates is superfluous.
-                record.pop('geometry')
-            self._validate_record_(record)
-
-            # Modify the geometry if a node threshold is provided. This breaks the polygon object into pieces with the
-            # approximate node count.
-            if self.node_threshold is not None and get_node_count(record['geom']) > self.node_threshold:
-                record['geom'] = get_split_polygon_by_node_threshold(record['geom'], self.node_threshold)
-
-            if return_uid:
-                uid = record['properties'][self.name_uid]
-                yld = (uid, record)
-            else:
-                yld = record
-            yield yld
-
-    def _get_records_(self, select_uid=None, slice=slice):
-        gi = GeomCabinetIterator(path=self.path, uid=self.name_uid, select_uid=select_uid, slice=slice)
-        return gi
-
-    def _validate_record_(self, record):
-        geom = record['geom']
-
-        # This should happen before any buffering. The buffering check may result in a single polygon object.
-        if not self.allow_multipart and isinstance(geom, BaseMultipartGeometry):
-            msg = 'Only singlepart geometries allowed. Perhaps "ugrid.convert_multipart_to_singlepart" would be useful?'
-            raise ValueError(msg)
 
 
 def get_split_array(arr, break_value):

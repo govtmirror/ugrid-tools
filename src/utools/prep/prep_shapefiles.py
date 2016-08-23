@@ -6,7 +6,8 @@ from logbook import DEBUG
 from netCDF4 import Dataset
 
 from utools.io.core import from_shapefile
-from utools.io.helpers import convert_multipart_to_singlepart, convert_collection_to_esmf_format, GeometryManager
+from utools.io.geom_manager import GeometryManager
+from utools.io.helpers import convert_multipart_to_singlepart, convert_collection_to_esmf_format
 from utools.io.mpi import MPI_RANK
 from utools.logging import log_entry_exit, log
 

@@ -28,7 +28,7 @@ def from_shapefile(path, name_uid, mesh_name='mesh', path_rtree=None, use_ragged
     :rtype: :class:`pyugrid.flexible_mesh.core.FlexibleMesh`
     """
     # tdk: update doc
-    from helpers import GeometryManager
+    from utools.io.geom_manager import GeometryManager
 
     gm = GeometryManager(name_uid, path=path, path_rtree=path_rtree, allow_multipart=allow_multipart,
                          node_threshold=node_threshold)

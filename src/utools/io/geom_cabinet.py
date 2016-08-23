@@ -53,7 +53,7 @@ class GeomCabinet(object):
             raise ValueError(msg)
 
     def iter_geoms(self, key=None, select_uid=None, path=None, load_geoms=True, uid=None, select_sql_where=None,
-                   slice=None):
+                   slc=None, dest_crs=None):
         """
         See documentation for :class:`~ocgis.GeomCabinetIterator`.
         """
@@ -76,31 +76,35 @@ class GeomCabinet(object):
         try:
             # return the features iterator
             features = self._get_features_object_(ds, uid=uid, select_uid=select_uid, select_sql_where=select_sql_where)
-            build = True
             for ctr, feature in enumerate(features):
                 # With a slice passed, ...
-                if slice is not None:
+                if slc is not None:
                     # ... iterate until start is reached.
-                    if ctr < slice[0]:
+                    if ctr < slc[0]:
                         continue
                     # ... stop if we have reached the stop.
-                    elif ctr == slice[1]:
+                    elif ctr == slc[1]:
                         raise StopIteration
 
+                ogr_geom = feature.GetGeometryRef()
+                if dest_crs is not None:
+                    ogr_geom.TransformTo(dest_crs)
+
                 if load_geoms:
-                    yld = {'geom': wkb.loads(feature.geometry().ExportToWkb())}
+                    yld = {'geom': wkb.loads(ogr_geom.ExportToWkb())}
                 else:
                     yld = {}
                 items = feature.items()
                 properties = OrderedDict([(key, items[key]) for key in feature.keys()])
-                yld.update({'properties': properties, 'meta': meta})
+                yld.update({'properties': properties})
 
-                if build:
+                if ctr == 0:
                     uid, add_uid = get_uid_from_properties(properties, uid)
                     # The properties schema needs to be updated to account for the adding of a unique identifier.
                     if add_uid:
                         meta['schema']['properties'][uid] = 'int'
-                    build = False
+                else:
+                    add_uid = None
 
                 # add the unique identifier if required
                 if add_uid:
@@ -223,14 +227,15 @@ class GeomCabinetIterator(object):
     """
 
     def __init__(self, key=None, select_uid=None, path=None, load_geoms=True, uid=None, select_sql_where=None,
-                 slice=None):
+                 slc=None, dest_crs=None):
         self.key = key
         self.path = path
         self.select_uid = select_uid
         self.load_geoms = load_geoms
         self.uid = uid
         self.select_sql_where = select_sql_where
-        self.slice = slice
+        self.slc = slc
+        self.dest_crs = dest_crs
         self.sc = GeomCabinet()
 
     def __iter__(self):
@@ -240,15 +245,15 @@ class GeomCabinetIterator(object):
 
         for row in self.sc.iter_geoms(key=self.key, select_uid=self.select_uid, path=self.path,
                                       load_geoms=self.load_geoms, uid=self.uid, select_sql_where=self.select_sql_where,
-                                      slice=self.slice):
+                                      slc=self.slc, dest_crs=self.dest_crs):
             yield row
 
     def __len__(self):
         # get the path to the output shapefile
         shp_path = self.sc._get_path_by_key_or_direct_path_(key=self.key, path=self.path)
 
-        if self.slice is not None:
-            ret = self.slice[1] - self.slice[0]
+        if self.slc is not None:
+            ret = self.slc[1] - self.slc[0]
         elif self.select_uid is not None:
             ret = len(self.select_uid)
         else:
