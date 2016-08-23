@@ -5,7 +5,7 @@ export UTOOLS_LOGGING_LEVEL=error
 
 
 echo '+++ Serial tests +++'
-nosetests -q -a '!mpi_only' src && \
+nosetests -q -a '!mpi_only,!dev' src && \
 echo '' && \
 
 echo '+++ MPI tests ++++++' && \

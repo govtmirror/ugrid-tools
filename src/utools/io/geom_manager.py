@@ -19,7 +19,7 @@ class GeometryManager(object):
     """
 
     def __init__(self, name_uid, path=None, records=None, path_rtree=None, allow_multipart=False, node_threshold=None,
-                 dest_crs=None):
+                 dest_crs=None, driver_kwargs=None, slc=None):
         if path_rtree is not None:
             assert os.path.exists(path_rtree + '.idx')
 
@@ -30,12 +30,14 @@ class GeometryManager(object):
         self.allow_multipart = allow_multipart
         self.node_threshold = node_threshold
         self.dest_crs = dest_crs
+        self.driver_kwargs = driver_kwargs
+        self.slc = slc
 
         self._has_provided_records = False if records is None else True
 
     def __len__(self):
         if self.records is None:
-            ret = len(GeomCabinetIterator(path=self.path))
+            ret = len(GeomCabinetIterator(path=self.path, driver_kwargs=self.driver_kwargs, slc=self.slc))
         else:
             ret = len(self.records)
         return ret
@@ -81,7 +83,9 @@ class GeometryManager(object):
             yield yld
 
     def _get_records_(self, select_uid=None, slc=None, dest_crs=None):
-        gi = GeomCabinetIterator(path=self.path, uid=self.name_uid, select_uid=select_uid, slc=slc, dest_crs=dest_crs)
+        slc = slc or self.slc
+        gi = GeomCabinetIterator(path=self.path, uid=self.name_uid, select_uid=select_uid, slc=slc, dest_crs=dest_crs,
+                                 driver_kwargs=self.driver_kwargs)
         return gi
 
     def _validate_record_(self, record):
