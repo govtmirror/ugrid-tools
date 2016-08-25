@@ -84,6 +84,8 @@ class GeometryManager(object):
 
     def _get_records_(self, select_uid=None, slc=None, dest_crs=None):
         slc = slc or self.slc
+        dest_crs = dest_crs or self.dest_crs
+
         gi = GeomCabinetIterator(path=self.path, uid=self.name_uid, select_uid=select_uid, slc=slc, dest_crs=dest_crs,
                                  driver_kwargs=self.driver_kwargs)
         return gi

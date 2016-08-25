@@ -2,15 +2,17 @@ import itertools
 from collections import deque, OrderedDict
 
 import fiona
+import netCDF4 as nc
 import numpy as np
 from numpy.ma import MaskedArray
 from shapely.geometry import shape, mapping, Polygon, MultiPolygon
 from shapely.geometry.base import BaseMultipartGeometry
 from shapely.geometry.polygon import orient
 
-from mpi import MPI_RANK, create_sections, MPI_COMM, hgather, vgather, MPI_SIZE, dgather
+from mpi import MPI_RANK, create_sections, MPI_COMM, MPI_SIZE, dgather
 from utools.addict import Dict
 from utools.constants import UgridToolsConstants
+from utools.logging import log
 
 
 def convert_multipart_to_singlepart(path_in, path_out, new_uid_name=UgridToolsConstants.LINK_ATTRIBUTE_NAME, start=0):
@@ -67,29 +69,52 @@ def get_coordinates_list_and_update_n_coords(record, n_coords):
     return coordinates_list, n_coords
 
 
-def get_coordinate_dict_variables(cdict, n_coords, polygon_break_value=None):
+def get_coordinate_dict_variables(cdict, n_coords, polygon_break_value=None, idx_start=0):
+    """
+    :param dict cdict: Dictionary mapping unique element identifiers to a sequence containing unique element coordinates
+     as a sequence. Keys are unique integer element identifiers. Values are lists composed of array-like objects. The
+     value lists may contain more than one array, indicating they are multi-polygon geometries.
+    :param int n_coords: Total coordinate count across all coordinate sequences.
+    :param int polygon_break_value: Negative integer value to use for breaks between multi-geometries.
+    :param int idx_start: Start index to use for computing node mappings. Useful in parallel when maintaining global
+     mappings.
+    :return: A tuple of coordinate dictionary derived variables.
+
+        0 --> Node index mapping to coordinate array.
+        1 --> Coordinates array.
+        2 --> Edge node index mapping to coordinate array.
+    :rtype: tuple (array-like, array-like, array-like)
+
+    >>> cdict = {5: [np.array([[1., 2], [3., 4.]]), np.array([[1., 2], [3., 4.], [5., 6.]])]}
+    >>> n_coords = 5
+    >>> polygon_break_value = -8
+
+    """
     polygon_break_value = polygon_break_value or UgridToolsConstants.POLYGON_BREAK_VALUE
     dtype_int = np.int32
     face_nodes = np.zeros(len(cdict), dtype=object)
-    idx_start = 0
+
+    global_idx_start = idx_start
     for idx_face_nodes, coordinates_list in enumerate(cdict.itervalues()):
         if idx_face_nodes == 0:
             coordinates = np.zeros((n_coords, 2), dtype=coordinates_list[0].dtype)
             edge_nodes = np.zeros_like(coordinates, dtype=dtype_int)
+
         for ctr, coordinates_element in enumerate(coordinates_list):
             shape_coordinates_row = coordinates_element.shape[0]
             idx_stop = idx_start + shape_coordinates_row
-
             new_face_nodes = np.arange(idx_start, idx_stop, dtype=dtype_int)
-            edge_nodes[idx_start: idx_stop, :] = get_edge_nodes(new_face_nodes)
+            # log.debug(('new_face_nodes=', new_face_nodes.tolist()))
+            edge_nodes[idx_start - global_idx_start: idx_stop - global_idx_start, :] = get_edge_nodes(new_face_nodes)
             if ctr == 0:
                 face_nodes_element = new_face_nodes
             else:
                 face_nodes_element = np.hstack((face_nodes_element, polygon_break_value))
                 face_nodes_element = np.hstack((face_nodes_element, new_face_nodes))
-            coordinates[idx_start:idx_stop, :] = coordinates_element
+            coordinates[idx_start - global_idx_start:idx_stop - global_idx_start, :] = coordinates_element
             idx_start += shape_coordinates_row
         face_nodes[idx_face_nodes] = face_nodes_element.astype(dtype_int)
+
     return face_nodes, coordinates, edge_nodes
 
 
@@ -131,15 +156,27 @@ def get_variables(gm, use_ragged_arrays=False, with_connectivity=True):
     if len(gm) < MPI_SIZE:
         raise ValueError('The number of geometries must be greater than or equal to the number of processes.')
 
-    result = get_face_variables(gm, with_connectivity=with_connectivity)
-
-    if MPI_RANK == 0:
-        face_links, nmax_face_nodes, face_ids, face_coordinates, cdict, n_coords, face_areas = result
-    else:
-        return
-
     pbv = UgridToolsConstants.POLYGON_BREAK_VALUE
-    face_nodes, coordinates, edge_nodes = get_coordinate_dict_variables(cdict, n_coords, polygon_break_value=pbv)
+
+    result = get_face_variables(gm, with_connectivity=with_connectivity)
+    face_links, nmax_face_nodes, face_ids, face_coordinates, cdict, n_coords, face_areas, section = result
+
+    # Find the start index for each rank.
+    all_n_coords = MPI_COMM.gather(n_coords)
+    if MPI_RANK == 0:
+        all_idx_start = [0] * MPI_SIZE
+        for idx in range(len(all_n_coords)):
+            if idx == 0:
+                continue
+            else:
+                all_idx_start[idx] = all_n_coords[idx - 1] + all_idx_start[idx - 1]
+    else:
+        all_idx_start = None
+    idx_start = MPI_COMM.scatter(all_idx_start)
+    log.debug(('idx_start', idx_start))
+
+    face_nodes, coordinates, edge_nodes = get_coordinate_dict_variables(cdict, n_coords, polygon_break_value=pbv,
+                                                                        idx_start=idx_start)
     face_edges = face_nodes
     face_ids = np.array(cdict.keys(), dtype=np.int32)
 
@@ -149,7 +186,7 @@ def get_variables(gm, use_ragged_arrays=False, with_connectivity=True):
             new_arrays.append(get_rectangular_array_from_object_array(a, (a.shape[0], nmax_face_nodes)))
         face_links, face_nodes, face_edges = new_arrays
 
-    return face_nodes, face_edges, edge_nodes, coordinates, face_links, face_ids, face_coordinates, face_areas
+    return face_nodes, face_edges, edge_nodes, coordinates, face_links, face_ids, face_coordinates, face_areas, section
 
 
 def get_rectangular_array_from_object_array(target, shape):
@@ -169,7 +206,10 @@ def iter_touching(si, gm, shapely_object):
             yield uid_target
 
 
-def get_face_variables(gm, with_connectivity=True):
+def get_face_variables(gm, with_connectivity=False):
+    if with_connectivity and MPI_SIZE > 1:
+        raise ValueError('Connectivity not enabled for parallel conversion.')
+
     n_face = len(gm)
 
     if MPI_RANK == 0:
@@ -227,29 +267,31 @@ def get_face_variables(gm, with_connectivity=True):
                 touching.append(-1)
             face_links[uid_source] = touching
 
-    face_ids = MPI_COMM.gather(face_ids, root=0)
-    max_face_nodes = MPI_COMM.gather(max_face_nodes, root=0)
-    face_links = MPI_COMM.gather(face_links, root=0)
-    face_coordinates = MPI_COMM.gather(np.array(face_coordinates), root=0)
-    cdict = MPI_COMM.gather(cdict, root=0)
-    n_coords = MPI_COMM.gather(n_coords, root=0)
-    face_areas = MPI_COMM.gather(np.array(face_areas), root=0)
+    # face_ids = MPI_COMM.gather(face_ids, root=0)
+    # max_face_nodes = MPI_COMM.gather(max_face_nodes, root=0)
+    # face_links = MPI_COMM.gather(face_links, root=0)
+    # face_coordinates = MPI_COMM.gather(np.array(face_coordinates), root=0)
+    # cdict = MPI_COMM.gather(cdict, root=0)
+    # n_coords = MPI_COMM.gather(n_coords, root=0)
+    # face_areas = MPI_COMM.gather(np.array(face_areas), root=0)
 
-    if MPI_RANK == 0:
-        face_ids = hgather(face_ids)
-        face_coordinates = vgather(face_coordinates)
-        cdict = dgather(cdict)
-        n_coords = sum(n_coords)
-        face_areas = hgather(face_areas)
+    # if MPI_RANK == 0:
+    #     face_ids = hgather(face_ids)
+    #     face_coordinates = vgather(face_coordinates)
+    #     cdict = dgather(cdict)
+    #     n_coords = sum(n_coords)
+    #     face_areas = hgather(face_areas)
+    #
+    #     max_face_nodes = max(max_face_nodes)
 
-        max_face_nodes = max(max_face_nodes)
+    if with_connectivity:
+        face_links = get_mapped_face_links(face_ids, face_links)
+    else:
+        face_links = None
 
-        if with_connectivity:
-            face_links = get_mapped_face_links(face_ids, face_links)
-        else:
-            face_links = None
-
-        return face_links, max_face_nodes, face_ids, face_coordinates, cdict, n_coords, face_areas
+    face_coordinates = np.array(face_coordinates)
+    face_areas = np.array(face_areas)
+    return face_links, max_face_nodes, face_ids, face_coordinates, cdict, n_coords, face_areas, section
 
 
 def get_mapped_face_links(face_ids, face_links):
@@ -390,7 +432,8 @@ def get_oriented_and_valid_geometry(geom):
     return geom
 
 
-def convert_collection_to_esmf_format(fmobj, ds, polygon_break_value=None, start_index=0, face_uid_name=None):
+def convert_collection_to_esmf_format(fmobj, filename, polygon_break_value=None, start_index=0, face_uid_name=None,
+                                      dataset_kwargs=None):
     """
     Convert to an ESMF format NetCDF files. Only supports ragged arrays.
 
@@ -399,8 +442,10 @@ def convert_collection_to_esmf_format(fmobj, ds, polygon_break_value=None, start
     :param ds: An open netCDF4 dataset object.
     :type ds: :class:`netCDF4.Dataset`
     """
-    # tdk: doc
 
+    dataset_kwargs = dataset_kwargs or {}
+
+    # tdk: doc
     # face_areas = fmobj.face_areas
     # face_coordinates = fmobj.face_coordinates
     # if face_uid_name is None:
@@ -466,52 +511,99 @@ def convert_collection_to_esmf_format(fmobj, ds, polygon_break_value=None, start
     #
     # coll.write(ds)
 
-    # Dimensions #######################################################################################################
+    node_counts = MPI_COMM.gather(nodes.shape[0])
+    element_counts = MPI_COMM.gather(faces.shape[0])
+    length_connection_counts = MPI_COMM.gather(length_connection_count)
 
-    node_count = ds.createDimension('nodeCount', nodes.shape[0])
-    element_count = ds.createDimension('elementCount', faces.shape[0])
-    coord_dim = ds.createDimension('coordDim', 2)
-    # element_conn_vltype = ds.createVLType(fm.faces[0].dtype, 'elementConnVLType')
-    connection_count = ds.createDimension('connectionCount', length_connection_count)
+    if MPI_RANK == 0:
+        ds = nc.Dataset(filename, 'w', **dataset_kwargs)
+        try:
+            # Dimensions -----------------------------------------------------------------------------------------------
 
-    # Variables ########################################################################################################
+            node_count_size = sum(node_counts)
+            element_count_size = sum(element_counts)
+            connection_count_size = sum(length_connection_counts)
 
-    node_coords = ds.createVariable('nodeCoords', nodes.dtype, (node_count.name, coord_dim.name))
-    node_coords.units = 'degrees'
-    node_coords[:] = nodes
+            node_count = ds.createDimension('nodeCount', node_count_size)
+            element_count = ds.createDimension('elementCount', element_count_size)
+            coord_dim = ds.createDimension('coordDim', 2)
+            # element_conn_vltype = ds.createVLType(fm.faces[0].dtype, 'elementConnVLType')
+            connection_count = ds.createDimension('connectionCount', connection_count_size)
 
-    element_conn = ds.createVariable('elementConn', element_conn_data.dtype, (connection_count.name,))
-    element_conn.long_name = 'Node indices that define the element connectivity.'
-    if polygon_break_value is not None:
-        element_conn.polygon_break_value = polygon_break_value
-    element_conn.start_index = start_index
-    element_conn[:] = element_conn_data
+            # Variables ------------------------------------------------------------------------------------------------
 
-    num_element_conn = ds.createVariable('numElementConn', np.int32, (element_count.name,))
-    num_element_conn.long_name = 'Number of nodes per element.'
-    num_element_conn[:] = num_element_conn_data
+            node_coords = ds.createVariable('nodeCoords', nodes.dtype, (node_count.name, coord_dim.name))
+            node_coords.units = 'degrees'
 
-    center_coords = ds.createVariable('centerCoords', face_coordinates.dtype, (element_count.name, coord_dim.name))
-    center_coords.units = 'degrees'
-    center_coords[:] = face_coordinates
+            element_conn = ds.createVariable('elementConn', element_conn_data.dtype, (connection_count.name,))
+            element_conn.long_name = 'Node indices that define the element connectivity.'
+            if polygon_break_value is not None:
+                element_conn.polygon_break_value = polygon_break_value
+            element_conn.start_index = start_index
 
-    if face_uid_value is not None:
-        uid = ds.createVariable(face_uid_name, face_uid_value.dtype, dimensions=(element_count.name,))
-        uid[:] = face_uid_value
-        uid.long_name = 'Element unique identifier.'
+            num_element_conn = ds.createVariable('numElementConn', np.int32, (element_count.name,))
+            num_element_conn.long_name = 'Number of nodes per element.'
 
-    element_area = ds.createVariable('elementArea', nodes.dtype, (element_count.name,))
-    element_area[:] = face_areas
-    element_area.units = 'degrees'
-    element_area.long_name = 'Element area in native units.'
+            center_coords = ds.createVariable('centerCoords', face_coordinates.dtype, (element_count.name,
+                                                                                       coord_dim.name))
+            center_coords.units = 'degrees'
 
-    # element_mask = ds.createVariable('elementMask', np.int32, (element_count.name,))
+            if face_uid_value is not None:
+                uid = ds.createVariable(face_uid_name, face_uid_value.dtype, dimensions=(element_count.name,))
+                uid.long_name = 'Element unique identifier.'
 
-    # Global Attributes ################################################################################################
+            element_area = ds.createVariable('elementArea', nodes.dtype, (element_count.name,))
+            element_area.units = 'degrees'
+            element_area.long_name = 'Element area in native units.'
 
-    ds.gridType = 'unstructured'
-    ds.version = '0.9'
-    setattr(ds, coord_dim.name, "longitude latitude")
+            # Global Attributes ----------------------------------------------------------------------------------------
+
+            ds.gridType = 'unstructured'
+            ds.version = '0.9'
+            setattr(ds, coord_dim.name, "longitude latitude")
+
+            # element_mask = ds.createVariable('elementMask', np.int32, (element_count.name,))
+
+        finally:
+            ds.close()
+
+    # Fill variable values -----------------------------------------------------------------------------------------
+
+    node_coords_start = 0
+    node_coords_stop = None
+    element_conn_start = 0
+    element_conn_stop = None
+
+    for rank_to_write in range(MPI_SIZE):
+        log.debug(('node_coords_start', node_coords_start))
+        if MPI_RANK == rank_to_write:
+            ds = nc.Dataset(filename, mode='a')
+            try:
+                node_coords = ds.variables['nodeCoords']
+                element_conn = ds.variables['elementConn']
+                num_element_conn = ds.variables['numElementConn']
+                center_coords = ds.variables['centerCoords']
+                element_area = ds.variables['elementArea']
+                if face_uid_value is not None:
+                    uid = ds.variables[face_uid_name]
+
+                node_coords_stop = node_coords_start + nodes.shape[0]
+                element_conn_stop = element_conn_start + element_conn_data.shape[0]
+                node_coords[node_coords_start:node_coords_stop] = nodes
+                log.debug(('element_conn indices', element_conn_start, element_conn_stop))
+                element_conn[element_conn_start:element_conn_stop] = element_conn_data
+
+                start, stop = fmobj['section']
+                num_element_conn[start:stop] = num_element_conn_data
+                center_coords[start:stop] = face_coordinates
+                element_area[start:stop] = face_areas
+                if face_uid_value is not None:
+                    uid[start:stop] = face_uid_value
+            finally:
+                ds.close()
+        node_coords_start = MPI_COMM.bcast(node_coords_stop, root=rank_to_write)
+        element_conn_start = MPI_COMM.bcast(element_conn_stop, root=rank_to_write)
+        MPI_COMM.Barrier()
 
 
 def get_split_polygon_by_node_threshold(geom, node_threshold):

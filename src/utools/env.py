@@ -9,10 +9,16 @@ from utools.helpers import get_iter
 
 class Environment(object):
     def __init__(self):
-        self.LOGGING_DIR = EnvParm('LOGGING_DIR', os.getcwd())
+        self.LOGGING_DIR = EnvParm('LOGGING_DIR', os.getcwd(), formatter=self._format_file_path_)
+        self.LOGGING_ENABLED = EnvParm('LOGGING_ENABLED', False, formatter=self._format_bool_)
+        self.LOGGING_FILEMODE = EnvParm('LOGGING_FILEMODE', 'a')
         self.LOGGING_FILE_PREFIX = EnvParm('LOGGING_FILE_PREFIX', UgridToolsConstants.PROJECT_PREFIX)
-        self.LOGGING_LEVEL = EnvParm('LOGGING_LEVEL', logbook.ERROR)
+        self.LOGGING_LEVEL = EnvParm('LOGGING_LEVEL', logbook.INFO)
         self.LOGGING_STDOUT = EnvParm('LOGGING_STDOUT', False, formatter=self._format_bool_)
+        self.LOGGING_TOFILE = EnvParm('LOGGING_TOFILE', True, formatter=self._format_bool_)
+
+        default_gdb = '/home/benkoziol/l/data/nfie/NHDPlusNationalData/NHDPlusV21_National_Seamless.gdb'
+        self.TEST_NHD_SEAMLESS_FILE_GDB = EnvParm('TEST_NHD_SEAMLESS_FILE_GDB', default_gdb)
 
     def __str__(self):
         msg = []
@@ -61,6 +67,10 @@ class Environment(object):
         from helpers import format_bool
 
         return format_bool(value)
+
+    @staticmethod
+    def _format_file_path_(value):
+        return os.path.expanduser(value)
 
 
 class EnvParm(object):

@@ -173,7 +173,10 @@ class GeomCabinet(object):
         # Get geometries by selecting the appropriate layer. Only single layer shapefiles are supported. For file
         # geodatabases, this is selected by the feature class name.
         if get_gdal_driver(ds) == 'OpenFileGDB':
-            lyr = ds.GetLayerByName(driver_kwargs['feature_class'])
+            feature_class = driver_kwargs['feature_class']
+            if feature_class is None:
+                raise ValueError('For file geodatabases, the feature class may not be None.')
+            lyr = ds.GetLayerByName(str(feature_class))
         else:
             lyr = ds.GetLayerByIndex(0)
 

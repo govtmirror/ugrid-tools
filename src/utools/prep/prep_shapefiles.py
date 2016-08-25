@@ -3,12 +3,11 @@ import re
 
 import numpy as np
 from logbook import DEBUG
-from netCDF4 import Dataset
 
+from utools.constants import UgridToolsConstants
 from utools.io.core import from_shapefile
 from utools.io.geom_manager import GeometryManager
 from utools.io.helpers import convert_multipart_to_singlepart, convert_collection_to_esmf_format
-from utools.io.mpi import MPI_RANK
 from utools.logging import log_entry_exit, log
 
 
@@ -21,21 +20,19 @@ def convert_to_singlepart():
 
 
 @log_entry_exit
-def convert_to_esmf_format(path_out_nc, path_in_shp, name_uid, node_threshold=None):
-    polygon_break_value = -8
+def convert_to_esmf_format(path_out_nc, path_in_shp, name_uid, node_threshold=None, debug=False, driver_kwargs=None,
+                           dest_crs=None, with_connectivity=False, dataset_kwargs=None):
+    polygon_break_value = UgridToolsConstants.POLYGON_BREAK_VALUE
 
     log.debug('loading flexible mesh')
-    coll = from_shapefile(path_in_shp, name_uid, use_ragged_arrays=True, with_connectivity=False, allow_multipart=True,
-                          node_threshold=node_threshold)
+    coll = from_shapefile(path_in_shp, name_uid, use_ragged_arrays=True, with_connectivity=with_connectivity,
+                          allow_multipart=True, node_threshold=node_threshold, debug=debug,
+                          driver_kwargs=driver_kwargs, dest_crs=dest_crs)
     log.debug('writing flexible mesh')
-    if MPI_RANK == 0:
-        ds = Dataset(path_out_nc, 'w', format='NETCDF3_CLASSIC')
-        try:
-            convert_collection_to_esmf_format(coll, ds, polygon_break_value=polygon_break_value, face_uid_name=name_uid)
-            validate_esmf_format(ds, name_uid, path_in_shp)
-        finally:
-            ds.close()
-        log.debug('success')
+    convert_collection_to_esmf_format(coll, path_out_nc, polygon_break_value=polygon_break_value,
+                                      face_uid_name=name_uid, dataset_kwargs=dataset_kwargs)
+    # validate_esmf_format(ds, name_uid, path_in_shp)
+    log.debug('success')
 
 
 @log_entry_exit

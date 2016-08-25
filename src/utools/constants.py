@@ -5,5 +5,7 @@ class UgridToolsConstants(object):
     LINK_ATTRIBUTE_NAME = 'MID'
     #: Polygon break value for multipart mesh geometries.
     POLYGON_BREAK_VALUE = -8
+    #: Default polygon node threshold.
+    NODE_THRESHOLD = 5000
 
     PROJECT_PREFIX = 'utools'

@@ -6,6 +6,7 @@ import time
 from logbook import Logger, StreamHandler, FileHandler
 from mpi4py import MPI
 
+import utools
 from utools import env
 
 MPI_COMM = MPI.COMM_WORLD
@@ -23,22 +24,24 @@ def formatter(record, handler):
 level = env.LOGGING_LEVEL
 log = Logger(env.LOGGING_FILE_PREFIX, level=level)
 
-if env.LOGGING_STDOUT:
-    sh = StreamHandler(sys.stdout, bubble=True)
-    sh.formatter = formatter
-    # sh.format_string += ' (rank={})'.format(MPI_RANK)
-    log.handlers.append(sh)
-    # sh.push_application()
+if env.LOGGING_ENABLED:
+    if env.LOGGING_STDOUT:
+        sh = StreamHandler(sys.stdout, bubble=True)
+        sh.formatter = formatter
+        # sh.format_string += ' (rank={})'.format(MPI_RANK)
+        log.handlers.append(sh)
+        # sh.push_application()
 
-fh_directory = env.LOGGING_DIR
-fh_file_prefix = env.LOGGING_FILE_PREFIX
-fh = FileHandler(os.path.join(fh_directory, '{}-rank-{}.log'.format(fh_file_prefix, MPI_RANK)), bubble=True, mode='a')
-fh.formatter = formatter
-# fh.format_string += ' (rank={})'.format(MPI_RANK)
-log.handlers.append(fh)
-
-
-# fh.push_application()
+    if env.LOGGING_TOFILE:
+        fh_directory = env.LOGGING_DIR
+        fh_file_prefix = env.LOGGING_FILE_PREFIX
+        fh = FileHandler(os.path.join(fh_directory, '{}-rank-{}.log'.format(fh_file_prefix, MPI_RANK)), bubble=True,
+                         mode=env.LOGGING_FILEMODE.lower())
+        fh.formatter = formatter
+        # fh.format_string += ' (rank={})'.format(MPI_RANK)
+        log.handlers.append(fh)
+        log.notice('Initialized (Version {})'.format(utools.__version__))
+        # fh.push_application()
 
 
 class log_entry_exit(object):
@@ -46,11 +49,11 @@ class log_entry_exit(object):
         self.f = f
 
     def __call__(self, *args, **kwargs):
-        log.debug("entering {0})".format(self.f.__name__))
+        log.debug("entering callable {0}".format(self.f.__name__))
         try:
             return self.f(*args, **kwargs)
         finally:
-            log.debug("exited {0})".format(self.f.__name__))
+            log.debug("exited callable {0}".format(self.f.__name__))
 
     def __get__(self, obj, _):
         """Support instance methods."""

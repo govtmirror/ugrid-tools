@@ -7,6 +7,7 @@ from shapely import wkt
 from shapely.geometry import shape
 
 from utools.helpers import write_fiona
+from utools.io.geom_manager import GeometryManager
 from utools.io.helpers import get_split_polygon_by_node_threshold
 from utools.io.mpi import MPI_RANK, MPI_COMM
 from utools.prep.prep_shapefiles import convert_to_esmf_format
@@ -21,28 +22,41 @@ class Test(AbstractUToolsTest):
 
     @attr('mpi')
     def test_convert_to_esmf_format(self):
+        # mpirun -n 2 nosetests -vs utools.test.test_utools.test_prep.test_prep_shapefiles:Test.test_convert_to_esmf_format
+
         name_uid = 'GRIDCODE'
-        path_out_nc = self.get_temporary_file_path('out.nc')
+        if MPI_RANK == 0:
+            path_out_nc = self.get_temporary_file_path('out.nc')
+        else:
+            path_out_nc = None
+        path_out_nc = MPI_COMM.bcast(path_out_nc)
+
         convert_to_esmf_format(path_out_nc, self.path_in_shp, name_uid)
 
         if MPI_RANK == 0:
             with self.nc_scope(path_out_nc) as ds:
                 self.assertEqual(len(ds.variables), 6)
-
-        MPI_COMM.Barrier()
+                self.assertEqual(len(ds.variables[name_uid]), len(GeometryManager(name_uid, path=self.path_in_shp)))
+                # shutil.copy2(path_out_nc, '/tmp/my.nc')
 
     @attr('mpi')
     def test_convert_to_esmf_format_node_threshold(self):
         """Test conversion with a node threshold for the elements."""
 
         name_uid = 'GRIDCODE'
-        path_out_nc = self.get_temporary_file_path('out.nc')
+        if MPI_RANK == 0:
+            path_out_nc = self.get_temporary_file_path('out.nc')
+        else:
+            path_out_nc = None
+        path_out_nc = MPI_COMM.bcast(path_out_nc)
+
         convert_to_esmf_format(path_out_nc, self.path_in_shp, name_uid, node_threshold=80)
 
         if MPI_RANK == 0:
             with self.nc_scope(path_out_nc) as ds:
                 self.assertGreater(ds.dimensions['nodeCount'], 16867)
                 self.assertEqual(len(ds.variables), 6)
+                # self.assertNcEqual(path_out_nc, '/home/benkoziol/htmp/template_esmf_format.nc')
 
         MPI_COMM.Barrier()
 
