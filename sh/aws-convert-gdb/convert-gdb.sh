@@ -18,7 +18,7 @@ export UTOOLS_LOGGING_ENABLED="true"
 export UTOOLS_LOGGING_MODE="w"
 export UTOOLS_LOGGING_TOFILE="true"
 #export UTOOLS_LOGGING_STDOUT="true"
-UTOOLS_OUTPUT_FILE=/home/ubuntu/htmp/ESMF_Unstructured_NHDPlusV21_National_Seamless_20160825_1026.nc
+UTOOLS_OUTPUT_FILE=/home/ubuntu/htmp/ESMF_Unstructured_Cartesian_NHDPlusV21_National_Seamless_20160825_1505.nc
 UTOOLS_SRC_DIR=/home/ubuntu/project/ugrid-tools/src
 UTOOLS_SRC_UID="GRIDCODE"
 
