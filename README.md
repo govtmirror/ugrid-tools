@@ -5,7 +5,7 @@ Provides set of command line Python tools for manipulating unstructured grid (fl
 # Convert Geometry Files to ESMF Unstructured Files
 
 ```
-Usage: utools_cli.py convert [OPTIONS]
+Usage: utools_cli convert [OPTIONS]
 
   Create ESMF unstructured NetCDF files from supported geometry containers
   (ESRI Shapefile, ESRI File Geodatabase).
@@ -40,7 +40,7 @@ Options:
 # Apply Weights From File
 
 ```
-Usage: utools_cli.py apply [OPTIONS]
+Usage: utools_cli apply [OPTIONS]
 
   Apply weights to a source variable.
 
