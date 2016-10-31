@@ -6,6 +6,7 @@ branches:
   except:
     - yellowstone-env
     - yellowstone-convert-to-esmf
+    - conus-spherical-exact-data
 
 env:
   - CONDA_PYTHON="python=2.7"

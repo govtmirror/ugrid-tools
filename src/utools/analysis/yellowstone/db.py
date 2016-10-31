@@ -39,6 +39,7 @@ class Job(Base):
     average_memory = Column(Float, nullable=False)
     run_time = Column(Float, nullable=False)
     turnaround_time = Column(Float, nullable=False)
+    queue = Column(String, nullable=False)
 
     @classmethod
     def create(cls, path):
@@ -50,8 +51,18 @@ class Job(Base):
         k['average_memory'] = re_file(path, 'Average Memory : +(.+) MB').group(1)
         k['run_time'] = re_file(path, 'Run time : +(.+) sec').group(1)
         k['turnaround_time'] = re_file(path, 'Turnaround time : +(.+) sec').group(1)
+        k['queue'] = re_file(path, 'in queue <(.+)>, as').group(1)
         job = Job(**k)
         return job
+
+
+class Memory(Base):
+    __tablename__ = 'memory'
+    mid = Column(Integer, primary_key=True)
+    task = Column(Integer, nullable=False)
+    task_total = Column(Integer, nullable=False)
+    used_mb = Column(Float, nullable=False)
+    job = relationship("Job", backref=backref("memory"))
 
 
 class Timing(Base):
@@ -118,19 +129,18 @@ def re_file(path, pattern):
             if search is not None:
                 return search
 
-
-                # def dump_model_to_csv(Session,Model,path):
-                #     s = Session()
-                #     try:
-                #         build = True
-                #         with open(path,'w') as f:
-                #             writer = csv.writer(f)
-                #             for row in s.query(Model):
-                #                 if build:
-                #                     headers = [column.name for column in row.__table__.columns]
-                #                     writer.writerow(headers)
-                #                     build = False
-                #                 to_write = [getattr(row,header) for header in headers]
-                #                 writer.writerow(to_write)
-                #     finally:
-                #         s.close()
+# def dump_model_to_csv(Session,Model,path):
+#     s = Session()
+#     try:
+#         build = True
+#         with open(path,'w') as f:
+#             writer = csv.writer(f)
+#             for row in s.query(Model):
+#                 if build:
+#                     headers = [column.name for column in row.__table__.columns]
+#                     writer.writerow(headers)
+#                     build = False
+#                 to_write = [getattr(row,header) for header in headers]
+#                 writer.writerow(to_write)
+#     finally:
+#         s.close()

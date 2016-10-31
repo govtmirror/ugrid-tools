@@ -2,17 +2,15 @@
 
 
 #BSUB -P P35071400
-#BSUB -R "span[ptile=16]"
-#BSUB -q regular
 #BSUB -B
 
+module load job_memusage
 
 # Large elements take a long time to triangulate. Increase the message passing wall time to make sure nodes will not
 # timeout when communicating.
 export MP_TIMEOUT=3600
 export MP_DEBUG_NOTIMEOUT=yes
 
-
 cd ${LOG_DIR}/esmf
-mpirun.lsf ${ESMF_EXE} -s ${SOURCE} -d ${DESTINATION} -w ${WEIGHTS} -m conserve --src_type GRIDSPEC --dst_type ESMF \
-    --src_regional
+mpirun.lsf job_memusage.exe ${ESMF_EXE} -s ${SOURCE} -d ${ESMF_UGRID_FILENAME} -w ${ESMF_WEIGHTS_FILENAME} -m conserve \
+    --src_type GRIDSPEC --dst_type ESMF --src_regional

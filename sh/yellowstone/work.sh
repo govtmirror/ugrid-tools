@@ -8,6 +8,9 @@
 # watch -n 5 bjobs
 
 #cd ${WD} && \
+#export J=conus-spherical-exact-data-regular2
+export J=conus-spherical-regular-256
+echo "Job name is: ${J}"
 
 export UTOOLS_SRC=/glade/u/home/benkoz/src/ugrid-tools
 UTOOLS_SH=${UTOOLS_SRC}/sh/yellowstone/jobs/run.sh
