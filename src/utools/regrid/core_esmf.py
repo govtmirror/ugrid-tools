@@ -29,7 +29,7 @@ def create_weights_file(mpirun_exe_path, esmf_exe_path, path_in_source, path_in_
 
 
 @log_entry_exit
-def created_weighted_output(path_in_esmf_format, path_in_source, path_out_weights_nc, path_output_data, variable_name):
+def create_weighted_output(path_in_esmf_format, path_in_source, path_out_weights_nc, path_output_data, variable_name):
     if MPI_RANK == 0:
         log.info('Copying/creating output file')
         shutil.copy2(path_in_esmf_format, path_output_data)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     #                                 path_out_weights_nc, n=n)
     #             log.info('stop create_weights_file={}'.format(time.time()))
     #
-    #             # created_weighted_output(path_in_esmf_format, path_in_source, path_out_weights_nc, path_output_data)
+    #             # create_weighted_output(path_in_esmf_format, path_in_source, path_out_weights_nc, path_output_data)
     #         except:
     #             log.exception('Operation failed')
 

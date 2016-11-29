@@ -108,10 +108,10 @@ def merge(catchment_directory, weight_directory, master_path):
 @click.option('-o', '--output', type=click.Path(writable=True), required=True,
               help='Path to the output file.')
 def apply(source, name, weights, esmf_format, output):
-    from utools.regrid.core_esmf import created_weighted_output
+    from utools.regrid.core_esmf import create_weighted_output
 
     log_entry('info', 'Starting weight application for "weights": {}'.format(weights), rank=0)
-    created_weighted_output(esmf_format, source, weights, output, name)
+    create_weighted_output(esmf_format, source, weights, output, name)
     log_entry('info', 'Finished weight application for "weights": {}'.format(weights), rank=0)
 
 

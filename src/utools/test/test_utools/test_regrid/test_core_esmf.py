@@ -6,7 +6,7 @@ import numpy as np
 from utools.io.mpi import MPI_RANK, MPI_COMM
 from utools.prep.create_netcdf_data import create_source_netcdf_data, get_exact_field
 from utools.prep.prep_shapefiles import convert_to_esmf_format
-from utools.regrid.core_esmf import create_weights_file, created_weighted_output, validate_weighted_output
+from utools.regrid.core_esmf import create_weights_file, create_weighted_output, validate_weighted_output
 from utools.regrid.core_ocgis import create_linked_shapefile
 from utools.test.base import AbstractUToolsTest, attr
 
@@ -25,7 +25,7 @@ class Test(AbstractUToolsTest):
 
         convert_to_esmf_format(path_in_esmf_format, path_in_shp, name_uid)
         create_weights_file(mpirun_exe_path, esmf_exe_path, path_in_source, path_in_esmf_format, path_out_weights_nc, n=8)
-        created_weighted_output(path_in_esmf_format, path_in_source, path_out_weights_nc, path_output_data, 'pr')
+        create_weighted_output(path_in_esmf_format, path_in_source, path_out_weights_nc, path_output_data, 'pr')
 
         validate_weighted_output(path_output_data)
 
@@ -42,7 +42,7 @@ class Test(AbstractUToolsTest):
 
         path_output_data = MPI_COMM.bcast(path_output_data)
 
-        created_weighted_output(path_esmf_format, path_in_source, path_weights_nc, path_output_data, 'pr')
+        create_weighted_output(path_esmf_format, path_in_source, path_weights_nc, path_output_data, 'pr')
 
         if MPI_RANK == 0:
             validate_weighted_output(path_output_data)
@@ -70,7 +70,7 @@ class Test(AbstractUToolsTest):
         create_source_netcdf_data(path_src, col, row, ttime, variable_name=variable_name)
         convert_to_esmf_format(path_in_esmf_format, path_in_shp, name_uid)
         create_weights_file(mpirun_exe_path, esmf_exe_path, path_src, path_in_esmf_format, path_out_weights_nc, n=1)
-        created_weighted_output(path_in_esmf_format, path_src, path_out_weights_nc, path_output_data, variable_name)
+        create_weighted_output(path_in_esmf_format, path_src, path_out_weights_nc, path_output_data, variable_name)
 
         create_linked_shapefile(name_uid, variable_name, path_in_shp, path_linked_shp, path_output_data)
 
