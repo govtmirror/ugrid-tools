@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-
-#BSUB -P P35071400
 #BSUB -B
+#BSUB -n 128
+#BSUB -W 02:00
+#BSUB -R "span[ptile=2]"
+#BSUB -q "regular"
 
 module load job_memusage
 
@@ -11,6 +13,11 @@ module load job_memusage
 export MP_TIMEOUT=3600
 export MP_DEBUG_NOTIMEOUT=yes
 
+export ESMF_EXE=/glade/u/home/benkoz/sandbox/esmf_HEAD/bin/ESMF_RegridWeightGen
+export SRC_FILENAME=${STORAGE}/exact_data/high_resolution_ucar_exact_data_20160811.nc
+export DST_FILENAME=${STORAGE}/esmf_unstructured/ESMF_Unstructured_Spherical_NHDPlusV21_National_Seamless_20160825_1505.nc
+export WEIGHTS_FILENAME=${STORAGE}/esmf_weights/ESMF_Weights_Spherical_NHDPlusV21_National_Seamless_${J}.nc
+
 cd ${LOG_DIR}/esmf
-mpirun.lsf job_memusage.exe ${ESMF_EXE} -s ${SOURCE} -d ${ESMF_UGRID_FILENAME} -w ${ESMF_WEIGHTS_FILENAME} -m conserve \
+mpirun.lsf job_memusage.exe ${ESMF_EXE} -s ${SRC_FILENAME} -d ${DST_FILENAME} -w ${WEIGHTS_FILENAME} -m conserve \
     --src_type GRIDSPEC --dst_type ESMF --src_regional
