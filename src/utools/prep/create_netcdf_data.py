@@ -12,10 +12,10 @@ def create_high_resolution_ucar_grid():
     lon = np.linspace(-133.50735, -60.492672, num=4608 * 4)
     lat = np.linspace(20.077797, 57.772186, num=3840 * 4)
     ttime = [10.]
-    create_source_netcdf_data(path, lon, lat, ttime)
+    create_source_netcdf_data(path, lon, lat, ttime, create_data_variable=False)
 
 
-def create_source_netcdf_data(path, lon, lat, ttime, variable_name='exact'):
+def create_source_netcdf_data(path, lon, lat, ttime, variable_name='exact', create_data_variable=True):
     ds = nc.Dataset(path, 'w')
     # ds = nc.Dataset(path, 'w', format='NETCDF3_CLASSIC')
     try:
@@ -53,15 +53,14 @@ def create_source_netcdf_data(path, lon, lat, ttime, variable_name='exact'):
         vtime.units = 'days since 2000-1-1'
         vtime.calendar = 'standard'
 
-        # mlon, mlat = np.meshgrid(lon, lat)
-        # exact = get_exact_field(mlat, mlon)
-        exact_shape = (len(ttime), lat.shape[0], lon.shape[0])
-        # fill_exact = np.zeros(exact_shape, dtype=np.float32)
-        vexact = ds.createVariable(variable_name, np.float32, dimensions=('time', 'lat', 'lon'))
-        for tidx, lat_idx, lon_idx in itertools.product(*[range(ii) for ii in exact_shape]):
-            exact = get_exact_field(np.atleast_1d(lon[lon_idx]), np.atleast_1d(lat[lat_idx]))
-            vexact[tidx, lat_idx, lon_idx] = exact[0]
-            # vexact[:] = fill_exact
+        if create_data_variable:
+            mlon, mlat = np.meshgrid(lon, lat)
+            exact_shape = (len(ttime), lat.shape[0], lon.shape[0])
+            vexact = ds.createVariable(variable_name, np.float32, dimensions=('time', 'lat', 'lon'))
+            # Use this fill fill approach to avoid memory issues with large grids.
+            for tidx, lon_idx in itertools.product(*[range(ii) for ii in [exact_shape[0], exact_shape[1]]]):
+                exact = get_exact_field(mlon[:, lon_idx], mlat[:, lon_idx])
+                vexact[tidx, :, lon_idx] = exact
     finally:
         ds.close()
 
