@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
 #BSUB -B
-#BSUB -n 128
-#BSUB -W 02:00
-#BSUB -R "span[ptile=2]"
+#BSUB -n 1
+#BSUB -W 00:01
 #BSUB -q "regular"
 
 module load job_memusage
@@ -19,5 +18,8 @@ export DST_FILENAME=${STORAGE}/esmf_unstructured/ESMF_Unstructured_Spherical_NHD
 export WEIGHTS_FILENAME=${STORAGE}/esmf_weights/ESMF_Weights_Spherical_NHDPlusV21_National_Seamless_${J}.nc
 
 cd ${LOG_DIR}/esmf
-mpirun.lsf job_memusage.exe ${ESMF_EXE} -s ${SRC_FILENAME} -d ${DST_FILENAME} -w ${WEIGHTS_FILENAME} -m conserve \
-    --src_type GRIDSPEC --dst_type ESMF --src_regional
+
+mpirun.lsf echo "execute!"
+
+#mpirun.lsf job_memusage.exe ${ESMF_EXE} -s ${SRC_FILENAME} -d ${DST_FILENAME} -w ${WEIGHTS_FILENAME} -m conserve \
+#    --src_type GRIDSPEC --dst_type ESMF --src_regional
