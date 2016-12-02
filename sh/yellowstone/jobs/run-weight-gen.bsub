@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
 #BSUB -B
-#BSUB -n 1
-#BSUB -W 00:01
+#BSUB -n 128
+#BSUB -W 02:00
 #BSUB -q "regular"
+#BSUB -R "span[ptile=2]"
 
 module load job_memusage
 
@@ -19,7 +20,7 @@ export WEIGHTS_FILENAME=${STORAGE}/esmf_weights/ESMF_Weights_Spherical_NHDPlusV2
 
 cd ${LOG_DIR}/esmf
 
-mpirun.lsf echo "execute!"
+#mpirun.lsf echo "execute!"
 
-#mpirun.lsf job_memusage.exe ${ESMF_EXE} -s ${SRC_FILENAME} -d ${DST_FILENAME} -w ${WEIGHTS_FILENAME} -m conserve \
-#    --src_type GRIDSPEC --dst_type ESMF --src_regional
+mpirun.lsf job_memusage.exe ${ESMF_EXE} -s ${SRC_FILENAME} -d ${DST_FILENAME} -w ${WEIGHTS_FILENAME} -m conserve \
+    --src_type GRIDSPEC --dst_type ESMF --src_regional
