@@ -1,10 +1,16 @@
 import os
 from contextlib import contextmanager
+from datetime import datetime
 
 import fiona
 import netCDF4 as nc
 from fiona.crs import from_epsg
 from shapely.geometry import mapping
+
+
+def get_datetime_fp_string():
+    now = datetime.now()
+    return now.strftime('%Y%m%d-%H%M%S')
 
 
 def format_bool(value):
