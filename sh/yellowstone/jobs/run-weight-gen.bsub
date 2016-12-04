@@ -4,7 +4,7 @@
 #BSUB -n 128
 #BSUB -W 02:00
 #BSUB -q "regular"
-#BSUB -R "span[ptile=2]"
+#BSUB -R "span[ptile=1]"
 
 module load job_memusage
 
