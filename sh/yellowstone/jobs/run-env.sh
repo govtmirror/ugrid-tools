@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-STORAGE=/glade/p/work/benkoz/storage
-
+export DATA_STORAGE=/glade/p/work/benkoz/storage
 export LOG_DIR=/glade/u/home/benkoz/logs/${J}
 export O="${LOG_DIR}/jobs/utools.%J.out"
 export E="${LOG_DIR}/jobs/utools.%J.err"
