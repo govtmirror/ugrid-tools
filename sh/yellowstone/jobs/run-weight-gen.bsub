@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 #BSUB -B
-#BSUB -n 128
+#BSUB -n 256
 #BSUB -W 02:00
 #BSUB -q "regular"
-#BSUB -R "span[ptile=1]"
+#BSUB -R "span[ptile=2]"
 
 module load job_memusage
 
