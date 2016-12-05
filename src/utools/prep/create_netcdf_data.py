@@ -8,9 +8,9 @@ from utools.io.helpers import get_bounds_from_1d, get_exact_field
 
 
 def create_high_resolution_ucar_grid():
-    path = '/tmp/high_resolution_ucar_exact_data_250m_{}.nc'.format(get_datetime_fp_string())
-    lon = np.linspace(-133.50735, -60.492672, num=4608 * 4)
-    lat = np.linspace(20.077797, 57.772186, num=3840 * 4)
+    path = '/tmp/high_resolution_ucar_exact_data_500m_{}.nc'.format(get_datetime_fp_string())
+    lon = np.linspace(-133.50735, -60.492672, num=4608 * 2)
+    lat = np.linspace(20.077797, 57.772186, num=3840 * 2)
     ttime = [10.]
     create_source_netcdf_data(path, lon, lat, ttime, create_data_variable=False)
 
