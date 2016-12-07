@@ -23,4 +23,4 @@ cd ${LOG_DIR}/esmf
 #mpirun.lsf echo "execute!"
 
 mpirun.lsf job_memusage.exe ${ESMF_EXE} -s ${SRC_FILENAME} -d ${DST_FILENAME} -w ${WEIGHTS_FILENAME} -m conserve \
-    --src_type GRIDSPEC --dst_type ESMF --src_regional
+    --src_type GRIDSPEC --dst_type ESMF --src_regional --netcdf4
