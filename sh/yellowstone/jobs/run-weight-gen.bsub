@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #BSUB -B
-#BSUB -n 256
+#BSUB -n 512
 #BSUB -W 01:00
 #BSUB -q "regular"
 #BSUB -R "span[ptile=1]"
