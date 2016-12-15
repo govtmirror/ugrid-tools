@@ -29,8 +29,8 @@ export ESMF_COMM=mpich2
 #export ESMF_NETCDF_INCLUDE=${PREFIX}/include
 #export ESMF_NETCDF_LIBPATH=${PREFIX}/lib
 
-make clean && \
- make info 2>&1 | tee "${OUTDIR}/esmf.make.info.`date`.out" && \
+make clean
+make info 2>&1 | tee "${OUTDIR}/esmf.make.info.`date`.out" && \
  make -j ${CPU_COUNT} 2>&1 | tee "${OUTDIR}/esmf.make.`date`.out" && \
 # make check
 # make all_tests | tee ~/esmf_all_tests.out
