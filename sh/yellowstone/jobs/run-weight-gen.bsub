@@ -7,6 +7,7 @@
 #BSUB -R "span[ptile=2]"
 
 module load job_memusage
+module swap intel gnu
 
 # Large elements take a long time to triangulate. Increase the message passing wall time to make sure nodes will not
 # timeout when communicating.
