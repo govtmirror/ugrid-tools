@@ -10,7 +10,7 @@ export ESMF_DIR=${BUILDDIR}/esmf
 #cd ~/src && \
 #git clone git://git.code.sf.net/p/esmf/esmf
 cp -r ${SRCDIR} ${BUILDDIR}
-cd ${BUILDDIR}
+cd ${ESMF_DIR}
 # git checkout master && \
 # git pull
 
