@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export PREFIX=/glade/u/home/benkoz/sandbox/esmf_HEAD
+export PREFIX=/glade/u/home/benkoz/sandbox/esmf_DEBUG
 export OUTDIR=/glade/u/home/benkoz/logs/esmf-build
 export SRCDIR=~/src/esmf
 export BUILDDIR=`mktemp -d`
