@@ -16,7 +16,7 @@ cd ${ESMF_DIR}
 
 rm -r ${PREFIX}
 
-#module swap intel gnu
+module swap intel gnu
 
 export ESMF_INSTALL_PREFIX=${PREFIX}
 export ESMF_INSTALL_BINDIR=${PREFIX}/bin
