@@ -35,3 +35,5 @@ make clean && \
 # make check
 # make all_tests | tee ~/esmf_all_tests.out
  make install 2>&1 | tee "${OUTDIR}/esmf.make.install.`date`.out"
+
+rm -rf ${BUILDDIR}
