@@ -2,7 +2,7 @@
 
 #BSUB -B
 #BSUB -n 512
-#BSUB -W 02:00
+#BSUB -W 00:30
 #BSUB -q "regular"
 #BSUB -R "span[ptile=2]"
 
@@ -14,7 +14,7 @@ module swap intel gnu
 export MP_TIMEOUT=3600
 export MP_DEBUG_NOTIMEOUT=yes
 
-export ESMF_EXE=/glade/u/home/benkoz/sandbox/esmf_HEAD/bin/ESMF_RegridWeightGen
+export ESMF_EXE=/glade/u/home/benkoz/sandbox/esmf_DEBUG/bin/ESMF_RegridWeightGen
 export SRC_FILENAME=${DATA_STORAGE}/exact_data/high_resolution_ucar_exact_data_250m_no_data_20161202-121058.nc
 #export SRC_FILENAME=${DATA_STORAGE}/exact_data/high_resolution_ucar_exact_data_500m_no_data_20161205-084522.nc
 export DST_FILENAME=${DATA_STORAGE}/esmf_unstructured/ESMF_Unstructured_Spherical_NHDPlusV21_National_Seamless_20160825_1505.nc
