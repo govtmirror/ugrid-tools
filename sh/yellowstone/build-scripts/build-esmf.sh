@@ -1,20 +1,24 @@
 #!/bin/bash
 
-export PREFIX=/glade/u/home/benkoz/sandbox/esmf_DEBUG
+export PREFIX=/glade/u/home/benkoz/sandbox/esmf_HEAD
 export OUTDIR=/glade/u/home/benkoz/logs/esmf-build
 export SRCDIR=~/src/esmf
 export BUILDDIR=`mktemp -d`
 export CPU_COUNT=1
 export ESMF_DIR=${BUILDDIR}/esmf
+export SHOULD_GIT_CLONE="true"
 
-#cd ~/src && \
-#git clone git://git.code.sf.net/p/esmf/esmf
+if [ ${SHOULD_GIT_CLONE} == "true" ]; then
+    cd ~/src && \
+     git clone git://git.code.sf.net/p/esmf/esmf
+fi
+
 cp -r ${SRCDIR} ${BUILDDIR}
 cd ${ESMF_DIR}
 # git checkout master && \
 # git pull
 
-rm -r ${PREFIX}
+rm -rf ${PREFIX}
 
 module swap intel gnu
 
