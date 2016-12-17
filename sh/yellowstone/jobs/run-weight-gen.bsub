@@ -2,7 +2,7 @@
 
 #BSUB -B
 #BSUB -n 512
-#BSUB -W 00:30
+#BSUB -W 02:00
 #BSUB -q "regular"
 #BSUB -R "span[ptile=2]"
 
