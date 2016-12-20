@@ -3,13 +3,16 @@
 #export PREFIX=/glade/u/home/benkoz/sandbox/esmf_DEBUG
 export PREFIX=/glade/u/home/benkoz/sandbox/esmf_HEAD
 export OUTDIR=/glade/u/home/benkoz/logs/esmf-build
-#export SRCDIR=~/src/esmf_dev
-export SRCDIR=~/src/esmf
+export SRCDIR_NAME=esmf
+#export SRCDIR_NAME=esmf_dev
 export BUILDDIR=`mktemp -d`
 export CPU_COUNT=1
-export ESMF_DIR=${BUILDDIR}/esmf
-#export ESMF_DIR=${BUILDDIR}/esmf_dev
 export SHOULD_GIT_CLONE="false"
+
+export SRCDIR=~/src/${SRCDIR_NAME}
+export ESMF_DIR=${BUILDDIR}/${SRCDIR_NAME}
+
+#-----------------------------------------------------------------------------------------------------------------------
 
 if [ ${SHOULD_GIT_CLONE} == "true" ]; then
     cd ~/src && \
