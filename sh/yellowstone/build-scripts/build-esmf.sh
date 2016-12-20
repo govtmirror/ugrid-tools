@@ -7,9 +7,9 @@ export BUILDDIR=`mktemp -d`
 export CPU_COUNT=1
 export SHOULD_GIT_CLONE="false"
 
-export SRCDIR=~/src/${SRCDIR_NAME}
-export ESMF_DIR=${BUILDDIR}/${SRCDIR_NAME}
 export PREFIX=/glade/u/home/benkoz/sandbox/${SRCDIR_NAME}
+export ESMF_DIR=${BUILDDIR}/${SRCDIR_NAME}
+export SRCDIR=~/src/${SRCDIR_NAME}
 
 #-----------------------------------------------------------------------------------------------------------------------
 
